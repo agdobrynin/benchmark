@@ -323,13 +323,13 @@ abstract class BenchmarkAbstract
     final protected function checkAvailableMethod(array $methods, string $classAttribute, string $parameterName, ReflectionClass|ReflectionMethod $on): Generator
     {
         foreach ($methods as $method) {
-            if (!isset($this->reflectionMethods[$method])) {
+            if (!is_string($method) || !isset($this->reflectionMethods[$method])) {
                 $onName = $on instanceof ReflectionClass
                     ? $on->getName().'::class'
                     : $on->getDeclaringClass()->getName().'::'.$on->getName().'()';
 
                 throw new InvalidArgumentException(
-                    sprintf('The attribute `%s` failed validation for the `%s`. The value of the `$%s` parameter must refer to a public class method. Got value %s.', $classAttribute, $onName, $parameterName, var_export($method, true))
+                    sprintf('Attribute `%s` failed validation for `%s`. The value of parameter `$%s` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing public class method. Value received: %s.', $classAttribute, $onName, $parameterName, var_export($method, true))
                 );
             }
 
