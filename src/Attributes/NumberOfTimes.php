@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Core\Attributes;
+namespace Kaspi\Benchmark\Attributes;
 
 use Attribute;
+
 use function max;
 
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]

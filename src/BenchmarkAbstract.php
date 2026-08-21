@@ -2,21 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Core;
+namespace Kaspi\Benchmark;
 
 use Generator;
 use InvalidArgumentException;
-use Kaspi\Benchmark\Core\Attributes\AfterMethod;
-use Kaspi\Benchmark\Core\Attributes\BeforeMethod;
-use Kaspi\Benchmark\Core\Attributes\Benchmark;
-use Kaspi\Benchmark\Core\Attributes\Iterations;
-use Kaspi\Benchmark\Core\Attributes\NumberOfTimes;
-use Kaspi\Benchmark\Core\Attributes\Parameters;
+use Kaspi\Benchmark\Attributes\AfterMethod;
+use Kaspi\Benchmark\Attributes\BeforeMethod;
+use Kaspi\Benchmark\Attributes\Benchmark;
+use Kaspi\Benchmark\Attributes\Iterations;
+use Kaspi\Benchmark\Attributes\NumberOfTimes;
+use Kaspi\Benchmark\Attributes\Parameters;
+use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
 use TypeError;
+
 use function gc_collect_cycles;
 use function gc_enable;
 use function get_debug_type;
@@ -30,6 +32,10 @@ use function sprintf;
 use function usort;
 use function var_export;
 
+/**
+ * @phpstan-import-type ParametersType from Parameters
+ * @phpstan-import-type ParametersReturnType from Parameters
+ */
 abstract class BenchmarkAbstract
 {
     /**
@@ -37,6 +43,9 @@ abstract class BenchmarkAbstract
      */
     protected readonly array $benchmarkMethods;
 
+    /**
+     * @var ReflectionClass<BenchmarkAbstract>
+     */
     protected readonly ReflectionClass $reflectionClass;
 
     /**
@@ -57,13 +66,10 @@ abstract class BenchmarkAbstract
     protected readonly array $afterMethodOnClass;
 
     /**
-     * @var list<callable(): Generator|array>
+     * @var ParametersType
      */
     protected readonly array $parametersOnClass;
 
-    /**
-     * @var int
-     */
     protected readonly int $numberOfTimesOnClass;
 
     final public function __construct(
@@ -77,7 +83,7 @@ abstract class BenchmarkAbstract
         // Find available methods
         $reflectionMethods = [];
 
-        foreach ($this->reflectionClass->getMethods()  as $reflectionMethod) {
+        foreach ($this->reflectionClass->getMethods() as $reflectionMethod) {
             $reflectionMethods[$reflectionMethod->getName()] = $reflectionMethod;
         }
 
@@ -156,11 +162,9 @@ abstract class BenchmarkAbstract
             $attributeBenchmark = $attribute->newInstance();
             $description = '' !== $attributeBenchmark->description
                 ? $attributeBenchmark->description
-                : self::methodToHuman($methodName);
+                : Formatter::methodToHuman($methodName);
 
-            /*
-             * Configure benchmark method aka `$reflectionMethod`.
-             */
+            // Configure benchmark method aka `$reflectionMethod`.
 
             /** @var list<ReflectionAttribute<Iterations>> $iterationAttributes */
             $iterationAttributes = $reflectionMethod->getAttributes(Iterations::class);
@@ -207,7 +211,6 @@ abstract class BenchmarkAbstract
                 ? $numberOfTimesMethodAttributes[0]->newInstance()->numberOfTimes
                 : $this->numberOfTimesOnClass;
 
-
             $benchmarkMethods[] = new BenchmarkMethod(
                 $description,
                 $reflectionMethod,
@@ -227,21 +230,14 @@ abstract class BenchmarkAbstract
         $this->benchmarkMethods = $benchmarkMethods;
     }
 
-    final protected static function methodToHuman(string $methodName): string
-    {
-        $step1 = str_replace(['_', '-'], ' ', $methodName);
-        $step2 = preg_replace('/(?<! )[A-Z]/', ' $0', $step1);
-
-        return ucfirst(strtolower(trim($step2)));
-    }
-
     /**
      * @throws ReflectionException
      */
     final public function doBenchmarks(): BenchmarkResults
     {
         $this->benchmarkResults->reset();
-        /** @var string|null $benchmarkTitle */
+
+        /** @var null|string $benchmarkTitle */
         $benchmarkTitle = null;
 
         foreach ($this->benchmarkMethods as $benchmarkMethod) {
@@ -261,10 +257,9 @@ abstract class BenchmarkAbstract
                 }
 
                 if ($this->showProgressBar) {
-                    print "\n";
+                    echo "\n";
                     $benchmarkTitle = sprintf('[%s] %s', $this->benchmarkResults->groupName, $benchmarkDescription);
                 }
-
 
                 for ($i = 1; $i <= $benchmarkMethod->iterations; ++$i) {
                     if (null !== $benchmarkTitle) {
@@ -299,7 +294,7 @@ abstract class BenchmarkAbstract
                 }
 
                 if ($this->showProgressBar) {
-                    print "\n";
+                    echo "\n";
                 }
 
                 foreach ($benchmarkMethod->afterReflectionMethod as $afterMethod) {
@@ -311,16 +306,17 @@ abstract class BenchmarkAbstract
         }
 
         if ($this->showProgressBar) {
-            print "\n";
+            echo "\n";
         }
 
         return $this->benchmarkResults;
     }
 
     /**
-     * @param non-empty-list<non-empty-string> $methods
+     * @param list<non-empty-string>                              $methods
+     * @param ReflectionClass<BenchmarkAbstract>|ReflectionMethod $on
      *
-     * @return Generator<ReflectionMethod>
+     * @return Generator<int, ReflectionMethod>
      *
      * @throws InvalidArgumentException
      */
@@ -331,6 +327,7 @@ abstract class BenchmarkAbstract
                 $onName = $on instanceof ReflectionClass
                     ? $on->getName().'::class'
                     : $on->getDeclaringClass()->getName().'::'.$on->getName().'()';
+
                 throw new InvalidArgumentException(
                     sprintf('The attribute `%s` failed validation for the `%s`. The value of the `$%s` parameter must refer to a public class method. Got value %s.', $classAttribute, $onName, $parameterName, var_export($method, true))
                 );
@@ -341,20 +338,22 @@ abstract class BenchmarkAbstract
     }
 
     /**
-     * @param ReflectionAttribute<Parameters> $parameters
+     * @param ReflectionAttribute<Parameters>                     $parameters
+     * @param ReflectionClass<BenchmarkAbstract>|ReflectionMethod $on
      *
-     * @return array<callable(): Generator|array>
+     * @return ParametersType
      *
      * @throws InvalidArgumentException
      */
-    final protected function buildParameters(ReflectionAttribute $parameters, ReflectionMethod|ReflectionClass $on): array
+    final protected function buildParameters(ReflectionAttribute $parameters, ReflectionClass|ReflectionMethod $on): array
     {
         try {
             return $parameters->newInstance()->parameters;
         } catch (TypeError $error) {
             $onName = $on instanceof ReflectionClass
-                ? $on->getName() . '::class'
-                : $on->getDeclaringClass()->getName() . '::' . $on->getName() . '()';
+                ? $on->getName().'::class'
+                : $on->getDeclaringClass()->getName().'::'.$on->getName().'()';
+
             throw new InvalidArgumentException(
                 sprintf('The attribute `%s` failed validation for the %s. Reason by: %s', Parameters::class, $onName, $error->getMessage()),
                 previous: $error,
@@ -363,7 +362,7 @@ abstract class BenchmarkAbstract
     }
 
     /**
-     * @return Generator<non-empty-string, array<array-key, mixed>>
+     * @return Generator<non-empty-string, array<int|string, mixed>>
      *
      * @throws InvalidArgumentException
      */

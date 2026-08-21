@@ -2,21 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Core;
+namespace Kaspi\Benchmark;
+
+use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageTotal;
+use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 
 use function count;
 use function current;
-use function max;
 
 final class BenchmarkResults
 {
     /**
-     * @var array{non-empty-string, list<TimeExecuteMemoryUsageIteration>}
+     * @var array<non-empty-string, list<TimeExecuteMemoryUsageIteration>>
      */
-    private array $results = [];
+    private array $results;
 
     /**
-     * @var array<non-empty-string, TimeExecuteMemoryUsingTotal>
+     * @var array<non-empty-string, TimeExecuteMemoryUsageTotal>
      */
     private array $timeExecuteMemoryUsingTotalItems;
 
@@ -51,17 +53,17 @@ final class BenchmarkResults
     /**
      * A key of array benchmark description.
      *
-     * @return array{non-empty-string, list<TimeExecuteMemoryUsageIteration>}
+     * @return array<non-empty-string, list<TimeExecuteMemoryUsageIteration>>
      */
     public function getResults(): array
     {
-        return $this->results;
+        return $this->results ?? [];
     }
 
     /**
      * A key of array benchmark description.
      *
-     * @return array<non-empty-string, TimeExecuteMemoryUsingTotal>
+     * @return array<non-empty-string, TimeExecuteMemoryUsageTotal>
      */
     public function getTimeExecuteMemoryUsingTotalItems(): array
     {
@@ -72,7 +74,7 @@ final class BenchmarkResults
         $this->timeExecuteMemoryUsingTotalItems = [];
 
         /**
-         * @var non-empty-string $benchmarkDescription
+         * @var non-empty-string                      $benchmarkDescription
          * @var list<TimeExecuteMemoryUsageIteration> $benchmarkResults
          */
         foreach ($this->results as $benchmarkDescription => $benchmarkResults) {
@@ -92,9 +94,9 @@ final class BenchmarkResults
     }
 
     /**
-     * @param non-empty-list<TimeExecuteMemoryUsageIteration> $benchmarkResults
+     * @param list<TimeExecuteMemoryUsageIteration> $benchmarkResults
      */
-    private function calculateTotal(array $benchmarkResults): false|TimeExecuteMemoryUsingTotal
+    private function calculateTotal(array $benchmarkResults): false|TimeExecuteMemoryUsageTotal
     {
         $firstItem = current($benchmarkResults);
 
@@ -105,8 +107,8 @@ final class BenchmarkResults
         $numberOfTimes = $firstItem->numberOfTimes;
         $iterations = count($benchmarkResults);
 
-        if ($iterations === 1) {
-            return new TimeExecuteMemoryUsingTotal(
+        if (1 === $iterations) {
+            return new TimeExecuteMemoryUsageTotal(
                 $firstItem->memoryUsage(),
                 $firstItem->memoryPeakUsage(),
                 $firstItem->hrTime(),
@@ -115,11 +117,6 @@ final class BenchmarkResults
             );
         }
 
-        /**
-         * @var int $sumMemoryAllocated
-         * @var int $sumMemoryPeak
-         * @var int $sumTime
-         */
         $sumMemoryAllocated = $sumMemoryPeak = $sumTime = 0;
 
         foreach ($benchmarkResults as $benchmarkResult) {
@@ -128,7 +125,7 @@ final class BenchmarkResults
             $sumTime += $benchmarkResult->hrTime();
         }
 
-        return new TimeExecuteMemoryUsingTotal(
+        return new TimeExecuteMemoryUsageTotal(
             $sumMemoryAllocated,
             $sumMemoryPeak,
             $sumTime,

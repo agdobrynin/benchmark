@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Core;
+namespace Kaspi\Benchmark\VO;
 
 final class TimeExecuteMemoryUsageIteration
 {

@@ -2,13 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Core;
+namespace Kaspi\Benchmark;
+
+use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageTotal;
 
 use function array_key_last;
 use function array_shift;
 use function count;
 use function explode;
 use function printf;
+use function strlen;
+use function substr;
 use function wordwrap;
 
 final class BenchmarkPrinter
@@ -17,6 +21,7 @@ final class BenchmarkPrinter
      * @var list<BenchmarkResults>
      */
     private array $benchmarkResultsCollection;
+
     public function attach(BenchmarkResults $benchmarkResults): self
     {
         $this->benchmarkResultsCollection[] = $benchmarkResults;
@@ -37,7 +42,7 @@ final class BenchmarkPrinter
         $formatResult = "\n| %-38s | %-5s | %-5s | %-11s | %-11s | %-11s |";
         $formatTableLineSeparator = "\n+%'-40s+%'-7s+%'-7s+%'-13s+%'-13s+%'-13s+";
 
-        $tableHead = <<< TABLEHEAD
+        $tableHead = <<< 'TABLEHEAD'
 
 +----------------------------------------+-------+-------+---------------------------+-------------+
 | Benchmark description                  |       | Num.  |         Memory            |    Time     |
@@ -49,7 +54,7 @@ TABLEHEAD;
             if ($currentPackageVersion !== $benchmarkResult->packageVersion) {
                 printf("\n\n+%'-98s+", '');
                 printf("\n| %-96s |", $benchmarkResult->packageVersion);
-                print $tableHead;
+                echo $tableHead;
                 $currentPackageVersion = $benchmarkResult->packageVersion;
                 printf("\n+%'-98s+", '');
             }
@@ -57,8 +62,7 @@ TABLEHEAD;
             printf("\n| %-96s |", $benchmarkResult->groupName);
             printf($formatTableLineSeparator, '', '', '', '', '', '');
 
-            $timeExecuteMemoryUsingTotalItems =  $benchmarkResult->getTimeExecuteMemoryUsingTotalItems();
-
+            $timeExecuteMemoryUsingTotalItems = $benchmarkResult->getTimeExecuteMemoryUsingTotalItems();
 
             foreach ($timeExecuteMemoryUsingTotalItems as $benchmarkDescription => $timeExecuteMemoryUsingTotal) {
                 $description = explode("\n", wordwrap($benchmarkDescription, 38, cut_long_words: true));
@@ -73,7 +77,7 @@ TABLEHEAD;
                     Formatter::formatTimeExecute($timeExecuteMemoryUsingTotal->hrTime, 4),
                 );
 
-                for ($i = 1, $c = count($description); $i < $c; $i++) {
+                for ($i = 1, $c = count($description); $i < $c; ++$i) {
                     printf($formatResult, $description[$i], '', '', '', '', '');
                 }
 
@@ -81,7 +85,7 @@ TABLEHEAD;
             }
         }
 
-        print "\n";
+        echo "\n";
     }
 
     public function printCompareVersions(): void
@@ -102,7 +106,7 @@ TABLEHEAD;
         $formatLineDescription = "\n| %30s |%-9s|%-7s|%-7s|%-13s|%-13s|%-13s|";
         $formatLineBound = "\n+%'-32s+%'-9s+%'-7s+%'-7s+%'-13s+%'-13s+%'-13s+";
 
-        print <<< TABLEHEAD
+        echo <<< 'TABLEHEAD'
 +--------------------------------+---------+-------+-------+---------------------------+-------------+
 | Benchmarks group               | Package | Iter. |  Num. |         Memory            |    Time     |
 |  ↘️  Benchmark description     | version |       |   of  +-------------+-------------+  execution  |
@@ -118,12 +122,13 @@ TABLEHEAD;
             foreach ($benchmarkResults as $benchmarkDescription => $packageVersions) {
                 $descriptionWrap = explode("\n", wordwrap($benchmarkDescription, 30, cut_long_words: true));
                 $lastPackageVersion = array_key_last($packageVersions);
+
                 /**
-                 * @var string $packageVersion
-                 * @var TimeExecuteMemoryUsingTotal $timeExecMemTotal
+                 * @var non-empty-string            $packageVersion
+                 * @var TimeExecuteMemoryUsageTotal $timeExecMemTotal
                  */
                 foreach ($packageVersions as $packageVersion => $timeExecMemTotal) {
-                    $packageVersionPrint = \strlen($packageVersion) > 7
+                    $packageVersionPrint = strlen($packageVersion) > 7
                         ? substr($packageVersion, 0, 6).'…'
                         : $packageVersion;
                     $descriptionWrapLine = array_shift($descriptionWrap);
@@ -153,17 +158,16 @@ TABLEHEAD;
                         printf($formatLineDescription, $descriptionWrapLine, '', '', '', '', '', '');
                     }
                 } while (null !== $descriptionWrapLine);
-
             }
         }
 
-        print "\n";
+        echo "\n";
     }
 
     private function collectionIsEmpty(): void
     {
         if (!isset($this->benchmarkResultsCollection)) {
-            print "Benchmark results collection is empty.\n";
+            echo "Benchmark results collection is empty.\n";
 
             exit(1);
         }

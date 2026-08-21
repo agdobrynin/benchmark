@@ -2,26 +2,31 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Core\Attributes;
+namespace Kaspi\Benchmark\Attributes;
 
 use Attribute;
 use Generator;
 use TypeError;
+
 use function array_values;
 use function is_callable;
 use function sprintf;
 use function var_export;
 
+/**
+ * @phpstan-type ParametersReturnType Generator<non-empty-string, array<int|string, mixed>>|array<non-empty-string, array<int|string, mixed>>
+ * @phpstan-type ParametersType list<callable(): ParametersReturnType>
+ */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
 final class Parameters
 {
     /**
-     * @var array<callable(): Generator|array>
+     * @var ParametersType
      */
     public readonly array $parameters;
 
     /**
-     * @param (list<callable(): Generator|array>)|(callable(): Generator|array) $parameters
+     * @param ParametersType $parameters
      */
     public function __construct(array|callable $parameters)
     {

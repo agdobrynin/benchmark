@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Core;
+namespace Kaspi\Benchmark\DTO;
 
-final class TimeExecuteMemoryUsingTotal
+final class TimeExecuteMemoryUsageTotal
 {
     public function __construct(
         public readonly float $memoryUsageUsage,

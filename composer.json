@@ -21,13 +21,8 @@
     "license": "MIT",
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
-        },
-        "files": [
-            "tests/Fixtures/function.php",
-            "tests/Function/Fixtures/functions.php",
-            "tests/DiContainerCall/Fixtures/function.php"
-        ]
+            "Kaspi\\Benchmark\\Tests\\": "tests/"
+        }
     },
     "authors": [
         {

@@ -2,4 +2,7 @@
 /vendor
 /composer.lock
 /.coverage-html
+/.phpunit.cache
+.php-cs-fixer.cache
+!.git-keep
 
