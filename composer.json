@@ -1,0 +1,52 @@
+{
+    "name": "kaspi/benchmark",
+    "description": "Simple benchmark library",
+    "keywords": ["benchmark"],
+    "type": "library",
+    "require": {
+        "php": "8.1 - 8.5",
+        "ext-reflection": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Kaspi\\Benchmark\\": "src"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "10.5.64",
+        "friendsofphp/php-cs-fixer": "3.95.17",
+        "phpstan/phpstan": "2.2.6",
+        "phpstan/phpstan-strict-rules": "2.0.12"
+    },
+    "license": "MIT",
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        },
+        "files": [
+            "tests/Fixtures/function.php",
+            "tests/Function/Fixtures/functions.php",
+            "tests/DiContainerCall/Fixtures/function.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Alexey Dobrynin",
+            "email": "ag.dobrynin@gmail.com",
+            "homepage": "https://github.com/agdobrynin"
+        }
+    ],
+    "minimum-stability": "stable",
+    "scripts": {
+        "fixer" : "./vendor/bin/php-cs-fixer fix",
+        "test" : "./vendor/bin/phpunit --testdox --no-coverage",
+        "test-cover" : "./vendor/bin/phpunit --coverage-text",
+        "stat" : "./vendor/bin/phpstan"
+    },
+    "scripts-descriptions": {
+        "fixer": "Run PHP Coding Standards Fixer",
+        "test" : "Run Phpunit test without coverage",
+        "test-cover" : "Run Phpunit with class coverage",
+        "stat" : "Run PHPstan static analyzer"
+    }
+}
