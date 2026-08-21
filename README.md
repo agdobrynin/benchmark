@@ -1,4 +1,4 @@
-# Simple benchmark
+# Simple benchmarking library
 
 ## Install
 
