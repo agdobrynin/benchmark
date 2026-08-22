@@ -8,6 +8,9 @@ use Kaspi\Benchmark\Attributes\Parameters;
 use ReflectionMethod;
 
 /**
+ * @internal
+ */
+/**
  * @phpstan-import-type ParametersType from Parameters
  */
 final class BenchmarkMethod
