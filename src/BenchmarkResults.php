@@ -77,7 +77,7 @@ final class BenchmarkResults
          * @var non-empty-string                      $benchmarkDescription
          * @var list<TimeExecuteMemoryUsageIteration> $benchmarkResults
          */
-        foreach ($this->results as $benchmarkDescription => $benchmarkResults) {
+        foreach ($this->getResults() as $benchmarkDescription => $benchmarkResults) {
             $total = $this->calculateTotal($benchmarkResults);
 
             if (false !== $total) {
