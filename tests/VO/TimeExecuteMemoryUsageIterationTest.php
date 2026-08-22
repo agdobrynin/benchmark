@@ -7,6 +7,7 @@ namespace Kaspi\Benchmark\Tests\VO;
 use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+
 use function round;
 
 /**
