@@ -72,7 +72,7 @@ TABLEHEAD;
                     $description[0],
                     $timeExecuteMemoryUsingTotal->iterations,
                     $timeExecuteMemoryUsingTotal->numberOfTimes,
-                    Formatter::formatBytes($timeExecuteMemoryUsingTotal->memoryUsageUsage, 4),
+                    Formatter::formatBytes($timeExecuteMemoryUsingTotal->memoryUsage, 4),
                     Formatter::formatBytes($timeExecuteMemoryUsingTotal->memoryPeakUsage, 4),
                     Formatter::formatTimeExecute($timeExecuteMemoryUsingTotal->hrTime, 4),
                 );
@@ -139,7 +139,7 @@ TABLEHEAD;
                         $packageVersionPrint,
                         $timeExecMemTotal->iterations,
                         $timeExecMemTotal->numberOfTimes,
-                        Formatter::formatBytes($timeExecMemTotal->memoryUsageUsage, 4),
+                        Formatter::formatBytes($timeExecMemTotal->memoryUsage, 4),
                         Formatter::formatBytes($timeExecMemTotal->memoryPeakUsage, 4),
                         Formatter::formatTimeExecute($timeExecMemTotal->hrTime, 4),
                     );
