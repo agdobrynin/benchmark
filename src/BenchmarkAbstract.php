@@ -39,7 +39,7 @@ use function var_export;
 abstract class BenchmarkAbstract
 {
     /**
-     * @var BenchmarkMethod[]
+     * @var list<BenchmarkMethod>
      */
     protected readonly array $benchmarkMethods;
 
