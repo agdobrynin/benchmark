@@ -12,6 +12,7 @@ use Kaspi\Benchmark\Attributes\Benchmark;
 use Kaspi\Benchmark\Attributes\Iterations;
 use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
+use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use ReflectionAttribute;
 use ReflectionClass;

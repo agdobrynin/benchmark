@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark;
+namespace Kaspi\Benchmark\DTO;
 
 use Kaspi\Benchmark\Attributes\Parameters;
 use ReflectionMethod;
