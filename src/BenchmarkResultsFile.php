@@ -117,69 +117,69 @@ final class BenchmarkResultsFile
      */
     private function getArrayFromFile(): array
     {
-        if (file_exists($this->outputFile)) {
-            $content = file_get_contents($this->outputFile);
-
-            if (false === $content) {
-                return [];
-            }
-
-            try {
-                $resultsFromFile = json_decode($content, true, flags: JSON_THROW_ON_ERROR | JSON_BIGINT_AS_STRING);
-            } catch (JsonException) {
-                return [];
-            }
-
-            if (!is_array($resultsFromFile)) {
-                return [];
-            }
-
-            $results = [];
-
-            foreach ($resultsFromFile as $version => $groups) {
-                if (!is_string($version) || '' === $version) {
-                    continue;
-                }
-
-                if (!is_array($groups) || 0 === count($groups)) {
-                    continue;
-                }
-
-                foreach ($groups as $groupName => $benchmarkResults) {
-                    if (!is_string($groupName) || '' === $groupName) {
-                        continue;
-                    }
-
-                    if (!is_array($benchmarkResults) || 0 === count($benchmarkResults)) {
-                        continue;
-                    }
-
-                    foreach ($benchmarkResults as $benchmarkDescription => $timeExecuteMemoryUsageIterationsItems) {
-                        if (!is_string($benchmarkDescription) || '' === $benchmarkDescription) {
-                            continue;
-                        }
-
-                        if (!is_array($timeExecuteMemoryUsageIterationsItems) || 0 === count($timeExecuteMemoryUsageIterationsItems)) {
-                            continue;
-                        }
-
-                        /**
-                         * @var TimeExecuteMemoryUsageIterationType $timeExecuteMemoryUsageIteration
-                         */
-                        foreach ($timeExecuteMemoryUsageIterationsItems as $timeExecuteMemoryUsageIteration) {
-                            if (!is_array($timeExecuteMemoryUsageIteration)) {
-                                continue;
-                            }
-
-                            $results[$version][$groupName][$benchmarkDescription][] = $timeExecuteMemoryUsageIteration;
-                        }
-                    }
-                }
-            }
-
-            return $results;
+        if (!file_exists($this->outputFile)) {
+            return [];
         }
 
-        return [];
+        $content = file_get_contents($this->outputFile);
+
+        if (false === $content) {
+            return [];
+        }
+
+        try {
+            $resultsFromFile = json_decode($content, true, flags: JSON_THROW_ON_ERROR | JSON_BIGINT_AS_STRING);
+        } catch (JsonException) {
+            return [];
+        }
+
+        if (!is_array($resultsFromFile)) {
+            return [];
+        }
+
+        $results = [];
+
+        foreach ($resultsFromFile as $version => $groups) {
+            if (!is_string($version) || '' === $version) {
+                continue;
+            }
+
+            if (!is_array($groups) || 0 === count($groups)) {
+                continue;
+            }
+
+            foreach ($groups as $groupName => $benchmarkResults) {
+                if (!is_string($groupName) || '' === $groupName) {
+                    continue;
+                }
+
+                if (!is_array($benchmarkResults) || 0 === count($benchmarkResults)) {
+                    continue;
+                }
+
+                foreach ($benchmarkResults as $benchmarkDescription => $timeExecuteMemoryUsageIterationsItems) {
+                    if (!is_string($benchmarkDescription) || '' === $benchmarkDescription) {
+                        continue;
+                    }
+
+                    if (!is_array($timeExecuteMemoryUsageIterationsItems) || 0 === count($timeExecuteMemoryUsageIterationsItems)) {
+                        continue;
+                    }
+
+                    /**
+                     * @var TimeExecuteMemoryUsageIterationType $timeExecuteMemoryUsageIteration
+                     */
+                    foreach ($timeExecuteMemoryUsageIterationsItems as $timeExecuteMemoryUsageIteration) {
+                        if (!is_array($timeExecuteMemoryUsageIteration)) {
+                            continue;
+                        }
+
+                        $results[$version][$groupName][$benchmarkDescription][] = $timeExecuteMemoryUsageIteration;
+                    }
+                }
+            }
+        }
+
+        return $results;
     }
 }
