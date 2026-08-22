@@ -52,6 +52,14 @@ final class BenchmarkResultsFile
         return $this;
     }
 
+    /**
+     * @return Generator<BenchmarkResults>
+     */
+    public function getAttached(): Generator
+    {
+        yield from $this->attachedBenchmarkResults ?? [];
+    }
+
     public function reset(): void
     {
         unset($this->attachedBenchmarkResults);
