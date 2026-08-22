@@ -101,7 +101,7 @@ final class BenchmarkResultsFile
                 $benchmarkResults = new BenchmarkResults($packageVersion, $fileGroupName);
 
                 foreach ($fileBenchmarkResults as $fileBenchmarkDescription => $fileTimeExecuteMemoryUsageIterations) {
-                    $benchmarkResults->attachResults(
+                    $benchmarkResults->attachIterations(
                         $fileBenchmarkDescription,
                         array_map(static fn (array $i): TimeExecuteMemoryUsageIteration => new TimeExecuteMemoryUsageIteration(...$i), $fileTimeExecuteMemoryUsageIterations)
                     );

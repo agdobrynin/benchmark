@@ -32,21 +32,25 @@ final class BenchmarkResults
     ) {}
 
     /**
+     * Attaches a single benchmark iteration to the collection of results.
+     *
      * @param non-empty-string $benchmarkDescription
      */
-    public function attach(string $benchmarkDescription, TimeExecuteMemoryUsageIteration $result): void
+    public function attachIteration(string $benchmarkDescription, TimeExecuteMemoryUsageIteration $iteration): void
     {
-        $this->results[$benchmarkDescription][] = $result;
+        $this->results[$benchmarkDescription][] = $iteration;
         unset($this->timeExecuteMemoryUsingTotalItems);
     }
 
     /**
+     * Attaches the collection of results from all iterations for a single benchmark.
+     *
      * @param non-empty-string                      $benchmarkDescription
-     * @param list<TimeExecuteMemoryUsageIteration> $results
+     * @param list<TimeExecuteMemoryUsageIteration> $iterations
      */
-    public function attachResults(string $benchmarkDescription, array $results): void
+    public function attachIterations(string $benchmarkDescription, array $iterations): void
     {
-        $this->results[$benchmarkDescription] = $results;
+        $this->results[$benchmarkDescription] = $iterations;
         unset($this->timeExecuteMemoryUsingTotalItems);
     }
 

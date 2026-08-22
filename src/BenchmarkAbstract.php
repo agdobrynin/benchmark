@@ -288,7 +288,7 @@ abstract class BenchmarkAbstract
                         $benchmarkMethod->numberOfTimes,
                     );
 
-                    $this->benchmarkResults->attach(
+                    $this->benchmarkResults->attachIteration(
                         $benchmarkDescription,
                         $timeMemory
                     );
