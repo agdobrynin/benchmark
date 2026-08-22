@@ -121,7 +121,7 @@ final class BenchmarkResultsFile
             return [];
         }
 
-        $content = file_get_contents($this->outputFile);
+        $content = @file_get_contents($this->outputFile);
 
         if (false === $content) {
             return [];
