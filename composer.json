@@ -16,7 +16,8 @@
         "phpunit/phpunit": "10.5.64",
         "friendsofphp/php-cs-fixer": "3.95.17",
         "phpstan/phpstan": "2.2.6",
-        "phpstan/phpstan-strict-rules": "2.0.12"
+        "phpstan/phpstan-strict-rules": "2.0.12",
+        "mikey179/vfsstream": "1.6.12"
     },
     "license": "MIT",
     "autoload-dev": {
