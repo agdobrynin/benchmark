@@ -73,6 +73,9 @@ abstract class BenchmarkAbstract
 
     protected readonly int $numberOfTimesOnClass;
 
+    /**
+     * @throws InvalidArgumentException
+     */
     final public function __construct(
         protected readonly BenchmarkResults $benchmarkResults,
         protected readonly bool $showProgressBar = true,
@@ -330,7 +333,7 @@ abstract class BenchmarkAbstract
                     : $on->getDeclaringClass()->getName().'::'.$on->getName().'()';
 
                 throw new InvalidArgumentException(
-                    sprintf('Attribute `%s` failed validation for `%s`. The value of parameter `$%s` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing public class method. Value received: %s.', $classAttribute, $onName, $parameterName, var_export($method, true))
+                    sprintf('Attribute `%s` failed validation for `%s`. The value of parameter `$%s` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing class method. Value received: %s.', $classAttribute, $onName, $parameterName, var_export($method, true))
                 );
             }
 
