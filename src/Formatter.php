@@ -42,7 +42,7 @@ final class Formatter
     }
 
     /**
-     * @param float $hrTime    microseconds
+     * @param float $hrTime    nanoseconds
      * @param int   $precision number of decimal digits to round to
      */
     public static function formatTimeExecute(float $hrTime, int $precision = 2): string
