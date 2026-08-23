@@ -78,7 +78,7 @@ final class Formatter
     {
         $normalizedTitle = strlen($title) > $sizeTitle
             ? substr($title, 0, $sizeTitle - 1).'…'
-            : str_pad($title, $sizeTitle);
+            : str_pad($title, $sizeTitle, '.');
 
         $percentage = (float) ($step / $total);
         $sizeBarProgress = (int) floor($percentage * $sizeBar);
