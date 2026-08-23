@@ -47,11 +47,15 @@ final class Formatter
      */
     public static function formatTimeExecute(float $hrTime, int $precision = 2): string
     {
-        $milliseconds = round($hrTime / 1e+6, $precision);
+        if ($hrTime >= 1_000_000_000) {
+            return round($hrTime / 1_000_000_000, $precision).' s';
+        }
 
-        return $milliseconds > 1000
-            ? round($hrTime / 1e+9, $precision).' s'
-            : $milliseconds.' ms';
+        if ($hrTime > 1_000) {
+            return round($hrTime / 1_000_000, $precision).' ms';
+        }
+
+        return round($hrTime, $precision).' ns';
     }
 
     /**
