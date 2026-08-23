@@ -7,6 +7,7 @@ namespace Kaspi\Benchmark;
 use Generator;
 use JsonException;
 use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
+use RuntimeException;
 
 use function array_map;
 use function count;
@@ -17,6 +18,8 @@ use function is_array;
 use function is_string;
 use function json_decode;
 use function json_encode;
+use function sprintf;
+use function var_export;
 
 use const JSON_BIGINT_AS_STRING;
 use const JSON_PRETTY_PRINT;
@@ -66,7 +69,7 @@ final class BenchmarkResultsFile
     }
 
     /**
-     * @throws JsonException
+     * @throws JsonException|RuntimeException
      */
     public function save(): self
     {
@@ -99,6 +102,8 @@ final class BenchmarkResultsFile
 
     /**
      * @return Generator<BenchmarkResults>
+     *
+     * @throws RuntimeException
      */
     public function read(): Generator
     {
@@ -122,6 +127,8 @@ final class BenchmarkResultsFile
 
     /**
      * @return array<PackageVersionType, array<BenchmarkGroupNameType, array<BenchmarkDescriptionType, non-empty-list<TimeExecuteMemoryUsageIterationType>>>>
+     *
+     * @throws RuntimeException
      */
     private function getArrayFromFile(): array
     {
@@ -149,29 +156,39 @@ final class BenchmarkResultsFile
 
         foreach ($resultsFromFile as $version => $groups) {
             if (!is_string($version) || '' === $version) {
-                continue;
+                throw new RuntimeException('The package version must be a non-empty string.');
             }
 
             if (!is_array($groups) || 0 === count($groups)) {
-                continue;
+                throw new RuntimeException(
+                    sprintf('A package of version %s must contain benchmark groups as a non-empty array.', var_export($version, true))
+                );
             }
 
             foreach ($groups as $groupName => $benchmarkResults) {
                 if (!is_string($groupName) || '' === $groupName) {
-                    continue;
+                    throw new RuntimeException(
+                        sprintf('Package version %s must contain benchmark groups as a non-empty array where each group name is a non-empty string.', var_export($version, true))
+                    );
                 }
 
                 if (!is_array($benchmarkResults) || 0 === count($benchmarkResults)) {
-                    continue;
+                    throw new RuntimeException(
+                        sprintf('A package of version %s with group name %s must contain benchmark results as a non-empty array.', var_export($version, true), var_export($groupName, true))
+                    );
                 }
 
                 foreach ($benchmarkResults as $benchmarkDescription => $timeExecuteMemoryUsageIterationsItems) {
                     if (!is_string($benchmarkDescription) || '' === $benchmarkDescription) {
-                        continue;
+                        throw new RuntimeException(
+                            sprintf('A package of version %s with group name %s must contain a benchmark description as a non-empty string.', var_export($version, true), var_export($groupName, true))
+                        );
                     }
 
                     if (!is_array($timeExecuteMemoryUsageIterationsItems) || 0 === count($timeExecuteMemoryUsageIterationsItems)) {
-                        continue;
+                        throw new RuntimeException(
+                            sprintf('Benchmark %s in package version %s and group named %s must contain iteration elements as a non-empty array.', var_export($benchmarkDescription, true), var_export($version, true), var_export($groupName, true))
+                        );
                     }
 
                     /**
@@ -179,7 +196,9 @@ final class BenchmarkResultsFile
                      */
                     foreach ($timeExecuteMemoryUsageIterationsItems as $timeExecuteMemoryUsageIteration) {
                         if (!is_array($timeExecuteMemoryUsageIteration)) {
-                            continue;
+                            throw new RuntimeException(
+                                sprintf('The benchmark %s in package version %s and group named %s must contain an array of iterations, where each element must be represented as a non-empty array with keys matching the public properties of class %s.', var_export($benchmarkDescription, true), var_export($version, true), var_export($groupName, true), TimeExecuteMemoryUsageIteration::class)
+                            );
                         }
 
                         $results[$version][$groupName][$benchmarkDescription][] = $timeExecuteMemoryUsageIteration;
