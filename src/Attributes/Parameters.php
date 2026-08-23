@@ -38,7 +38,7 @@ final class Parameters
         foreach ($parameters as $parameter) {
             if (!is_callable($parameter)) {
                 throw new TypeError(
-                    sprintf('Parameters for the benchmark method must be of a callable type. Got: %s', var_export($parameter, true))
+                    sprintf('Parameters for the benchmark method must be of a callable type or a list of callable types. Got: %s', var_export($parameter, true))
                 );
             }
         }
