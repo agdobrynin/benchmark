@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kaspi\Benchmark;
 
+use Generator;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageTotal;
 use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 
@@ -57,22 +58,22 @@ final class BenchmarkResults
     /**
      * A key of array benchmark description.
      *
-     * @return array<non-empty-string, list<TimeExecuteMemoryUsageIteration>>
+     * @return Generator<non-empty-string, list<TimeExecuteMemoryUsageIteration>>
      */
-    public function getResults(): array
+    public function getResults(): Generator
     {
-        return $this->results ?? [];
+        yield from $this->results ?? [];
     }
 
     /**
      * A key of array benchmark description.
      *
-     * @return array<non-empty-string, TimeExecuteMemoryUsageTotal>
+     * @return Generator<non-empty-string, TimeExecuteMemoryUsageTotal>
      */
-    public function getTimeExecuteMemoryUsingTotalItems(): array
+    public function getTimeExecuteMemoryUsingTotalItems(): Generator
     {
         if (isset($this->timeExecuteMemoryUsingTotalItems)) {
-            return $this->timeExecuteMemoryUsingTotalItems;
+            yield from $this->timeExecuteMemoryUsingTotalItems;
         }
 
         $this->timeExecuteMemoryUsingTotalItems = [];
@@ -89,7 +90,7 @@ final class BenchmarkResults
             }
         }
 
-        return $this->timeExecuteMemoryUsingTotalItems;
+        yield from $this->timeExecuteMemoryUsingTotalItems;
     }
 
     public function reset(): void

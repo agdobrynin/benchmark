@@ -110,19 +110,25 @@ class BenchmarkResultsFileTest extends TestCase
         self::assertEquals('foo', $resExistGet->packageVersion);
         self::assertEquals('bar', $resExistGet->groupName);
 
-        $iterations = $resExistGet->getResults()['baz'];
+        $iterations = $resExistGet->getResults();
 
-        self::assertCount(1, $iterations);
+        self::assertTrue($iterations->valid());
 
-        $iteration = $iterations[0];
+        self::assertEquals('baz', $iterations->key());
+        $items = $iterations->current();
+        self::assertCount(1, $items);
 
-        self::assertEquals(10, $iteration->startMemoryUsage);
-        self::assertEquals(21, $iteration->endMemoryUsage);
-        self::assertEquals(10, $iteration->startMemoryPeakUsage);
-        self::assertEquals(10, $iteration->endMemoryPeakUsage);
-        self::assertEquals(20.134, $iteration->startHrTime);
-        self::assertEquals(22.987, $iteration->endHrTime);
-        self::assertEquals(1, $iteration->numberOfTimes);
+        self::assertEquals(10, $items[0]->startMemoryUsage);
+        self::assertEquals(21, $items[0]->endMemoryUsage);
+        self::assertEquals(10, $items[0]->startMemoryPeakUsage);
+        self::assertEquals(10, $items[0]->endMemoryPeakUsage);
+        self::assertEquals(20.134, $items[0]->startHrTime);
+        self::assertEquals(22.987, $items[0]->endHrTime);
+        self::assertEquals(1, $items[0]->numberOfTimes);
+
+        $iterations->next();
+
+        self::assertFalse($iterations->valid());
 
         $resSet = new BenchmarkResults('foo', 'bar');
         $resSet->attachIterations(
@@ -155,19 +161,21 @@ class BenchmarkResultsFileTest extends TestCase
         self::assertEquals('foo', $resGetUpdated->packageVersion);
         self::assertEquals('bar', $resGetUpdated->groupName);
 
-        $iterations = $resGetUpdated->getResults()['baz'];
+        $iterations = $resGetUpdated->getResults();
 
-        self::assertCount(1, $iterations);
+        self::assertEquals('baz', $iterations->key());
 
-        $iteration = $iterations[0];
+        $items = $iterations->current();
 
-        self::assertEquals(11, $iteration->startMemoryUsage);
-        self::assertEquals(20, $iteration->endMemoryUsage);
-        self::assertEquals(0, $iteration->startMemoryPeakUsage);
-        self::assertEquals(0, $iteration->endMemoryPeakUsage);
-        self::assertEquals(24.222, $iteration->startHrTime);
-        self::assertEquals(25.432, $iteration->endHrTime);
-        self::assertEquals(2, $iteration->numberOfTimes);
+        self::assertCount(1, $items);
+
+        self::assertEquals(11, $items[0]->startMemoryUsage);
+        self::assertEquals(20, $items[0]->endMemoryUsage);
+        self::assertEquals(0, $items[0]->startMemoryPeakUsage);
+        self::assertEquals(0, $items[0]->endMemoryPeakUsage);
+        self::assertEquals(24.222, $items[0]->startHrTime);
+        self::assertEquals(25.432, $items[0]->endHrTime);
+        self::assertEquals(2, $items[0]->numberOfTimes);
     }
 
     public function testReset(): void
