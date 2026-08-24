@@ -26,6 +26,7 @@ use function get_debug_type;
 use function hrtime;
 use function is_array;
 use function is_callable;
+use function is_int;
 use function is_string;
 use function memory_get_peak_usage;
 use function memory_get_usage;
@@ -392,27 +393,40 @@ abstract class BenchmarkAbstract
             }
 
             foreach ($gotParameters as $groupName => $args) {
-                if (!is_string($groupName) || '' === $groupName) {
+                $normalizedGroupName = is_int($groupName)
+                    ? 'Set #'.$groupName
+                    : $groupName;
+
+                if (!is_string($normalizedGroupName) || '' === $normalizedGroupName) {
                     $callableName = '';
                     is_callable($parameter, callable_name: $callableName);
 
                     throw new InvalidArgumentException(
-                        sprintf('The parameter group name in the parameter source %s() must be a non-empty string.', $callableName)
+                        sprintf('The parameter group name in the parameter source %s() must be a non-empty string or integer.', $callableName)
                     );
                 }
 
-                if (isset($flippedArgsNames[$groupName])) {
+                if (!is_array($args)) {
                     $callableName = '';
                     is_callable($parameter, callable_name: $callableName);
 
                     throw new InvalidArgumentException(
-                        sprintf('The parameter group name "%s" is not unique in the parameter source %s().', $groupName, $callableName)
+                        sprintf('The parameter group named %s in the parameter source %s() must return an array containing the parameters.', var_export($normalizedGroupName, true), $callableName)
                     );
                 }
 
-                $flippedArgsNames[$groupName] = true;
+                if (isset($flippedArgsNames[$normalizedGroupName])) {
+                    $callableName = '';
+                    is_callable($parameter, callable_name: $callableName);
 
-                yield $groupName => $args;
+                    throw new InvalidArgumentException(
+                        sprintf('The parameter group named "%s" is not unique in the parameter source %s().', $normalizedGroupName, $callableName)
+                    );
+                }
+
+                $flippedArgsNames[$normalizedGroupName] = true;
+
+                yield $normalizedGroupName => $args;
             }
         }
     }
