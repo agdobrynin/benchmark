@@ -47,7 +47,7 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
     public function testRunBenchmarkInvalidParametersReturnType(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('provideParams must be return an array or Generator, got string');
+        $this->expectExceptionMessage('provideParams() must be return an array or Generator, got string');
 
         $class = new class($this->benchmarkResults, false) extends BenchmarkAbstract {
             #[Benchmark('do nothing')]
