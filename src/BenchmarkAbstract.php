@@ -380,15 +380,13 @@ abstract class BenchmarkAbstract
         /** @var array<string, true> $flippedArgsNames */
         $flippedArgsNames = [];
 
+        /** @var callable(): ParametersReturnType $parameter */
         foreach ($benchMethod->parameters as $parameter) {
             $gotParameters = ($parameter)();
 
             if (!$gotParameters instanceof Generator && !is_array($gotParameters)) {
-                $callableName = '';
-                is_callable($parameter, callable_name: $callableName);
-
                 throw new InvalidArgumentException(
-                    sprintf('Source parameters %s must be return an array or Generator, got %s.', $callableName, get_debug_type($gotParameters)),
+                    sprintf('Source parameters %s() must be return an array or Generator, got %s.', $this->callableName($parameter), get_debug_type($gotParameters)),
                 );
             }
 
@@ -398,29 +396,20 @@ abstract class BenchmarkAbstract
                     : $groupName;
 
                 if (!is_string($normalizedGroupName) || '' === $normalizedGroupName) {
-                    $callableName = '';
-                    is_callable($parameter, callable_name: $callableName);
-
                     throw new InvalidArgumentException(
-                        sprintf('The parameter group name in the parameter source %s() must be a non-empty string or integer.', $callableName)
+                        sprintf('The parameter group name in the parameter source %s() must be a non-empty string or integer.', $this->callableName($parameter))
                     );
                 }
 
                 if (!is_array($args)) {
-                    $callableName = '';
-                    is_callable($parameter, callable_name: $callableName);
-
                     throw new InvalidArgumentException(
-                        sprintf('The parameter group named %s in the parameter source %s() must return an array containing the parameters.', var_export($normalizedGroupName, true), $callableName)
+                        sprintf('The parameter group named %s in the parameter source %s() must return an array containing the parameters.', var_export($normalizedGroupName, true), $this->callableName($parameter))
                     );
                 }
 
                 if (isset($flippedArgsNames[$normalizedGroupName])) {
-                    $callableName = '';
-                    is_callable($parameter, callable_name: $callableName);
-
                     throw new InvalidArgumentException(
-                        sprintf('The parameter group named "%s" is not unique in the parameter source %s().', $normalizedGroupName, $callableName)
+                        sprintf('The parameter group named "%s" is not unique in the parameter source %s().', $normalizedGroupName, $this->callableName($parameter))
                     );
                 }
 
@@ -429,5 +418,13 @@ abstract class BenchmarkAbstract
                 yield $normalizedGroupName => $args;
             }
         }
+    }
+
+    final protected function callableName(mixed $callable): string
+    {
+        $callableName = '';
+        is_callable($callable, true, $callableName);
+
+        return $callableName;
     }
 }
