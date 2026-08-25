@@ -12,6 +12,7 @@ use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function array_column;
@@ -22,9 +23,9 @@ use function array_column;
 #[CoversClass(BenchmarkRunner::class)]
 #[CoversClass(Benchmark::class)]
 #[CoversClass(AfterMethod::class)]
-#[CoversClass(BenchmarkResults::class)]
 #[CoversClass(BenchmarkMethod::class)]
-#[CoversClass(Formatter::class)]
+#[UsesClass(BenchmarkResults::class)]
+#[UsesClass(Formatter::class)]
 class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'The value of parameter `$afterMethod` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing class method.';

@@ -18,23 +18,24 @@ use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 /**
  * @internal
  */
-#[CoversClass(BenchmarkResults::class)]
 #[CoversClass(BenchmarkRunner::class)]
-#[CoversClass(Benchmark::class)]
-#[CoversClass(Parameters::class)]
-#[CoversClass(BenchmarkMethod::class)]
-#[CoversClass(TimeExecuteMemoryUsageIteration::class)]
-#[CoversClass(AfterMethod::class)]
-#[CoversClass(BeforeMethod::class)]
-#[CoversClass(Iterations::class)]
-#[CoversClass(NumberOfTimes::class)]
-#[CoversClass(Formatter::class)]
+#[UsesClass(BenchmarkResults::class)]
+#[UsesClass(Benchmark::class)]
+#[UsesClass(Parameters::class)]
+#[UsesClass(BenchmarkMethod::class)]
+#[UsesClass(TimeExecuteMemoryUsageIteration::class)]
+#[UsesClass(AfterMethod::class)]
+#[UsesClass(BeforeMethod::class)]
+#[UsesClass(Iterations::class)]
+#[UsesClass(NumberOfTimes::class)]
+#[UsesClass(Formatter::class)]
 class BenchmarkRunBenchmarkTest extends TestCase
 {
     protected BenchmarkResults $benchmarkResults;

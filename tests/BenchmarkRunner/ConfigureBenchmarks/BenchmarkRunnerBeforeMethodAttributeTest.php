@@ -12,18 +12,18 @@ use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
 #[CoversClass(BenchmarkRunner::class)]
+#[CoversClass(BenchmarkMethod::class)]
 #[CoversClass(Benchmark::class)]
 #[CoversClass(BeforeMethod::class)]
-#[CoversClass(BenchmarkResults::class)]
-#[CoversClass(BenchmarkRunner::class)]
-#[CoversClass(BenchmarkMethod::class)]
-#[CoversClass(Formatter::class)]
+#[UsesClass(BenchmarkResults::class)]
+#[UsesClass(Formatter::class)]
 class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'The value of parameter `$beforeMethod` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing class method.';

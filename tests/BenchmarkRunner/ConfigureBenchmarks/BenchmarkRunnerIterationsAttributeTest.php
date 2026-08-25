@@ -11,17 +11,18 @@ use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversClass(BenchmarkResults::class)]
 #[CoversClass(BenchmarkRunner::class)]
+#[CoversClass(BenchmarkMethod::class)]
 #[CoversClass(Benchmark::class)]
 #[CoversClass(Iterations::class)]
-#[CoversClass(BenchmarkMethod::class)]
-#[CoversClass(Formatter::class)]
+#[UsesClass(BenchmarkResults::class)]
+#[UsesClass(Formatter::class)]
 class BenchmarkRunnerIterationsAttributeTest extends TestCase
 {
     protected BenchmarkResults $benchmarkResults;

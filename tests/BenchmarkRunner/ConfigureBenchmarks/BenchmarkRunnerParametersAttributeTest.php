@@ -13,17 +13,18 @@ use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
 #[CoversClass(BenchmarkRunner::class)]
-#[CoversClass(BenchmarkResults::class)]
 #[CoversClass(Parameters::class)]
 #[CoversClass(Benchmark::class)]
-#[CoversClass(Formatter::class)]
 #[CoversClass(BenchmarkMethod::class)]
+#[UsesClass(Formatter::class)]
+#[UsesClass(BenchmarkResults::class)]
 class BenchmarkRunnerParametersAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'Parameters for the benchmark method must be of a callable type or a list of callable types';

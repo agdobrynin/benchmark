@@ -10,16 +10,17 @@ use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
-#[CoversClass(Benchmark::class)]
-#[CoversClass(BenchmarkMethod::class)]
 #[CoversClass(BenchmarkRunner::class)]
-#[CoversClass(BenchmarkResults::class)]
-#[CoversClass(TimeExecuteMemoryUsageIteration::class)]
+#[UsesClass(Benchmark::class)]
+#[UsesClass(BenchmarkMethod::class)]
+#[UsesClass(BenchmarkResults::class)]
+#[UsesClass(TimeExecuteMemoryUsageIteration::class)]
 class ResetBenchmarkResultsTest extends TestCase
 {
     public function testResetResults(): void

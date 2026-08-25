@@ -11,6 +11,7 @@ use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -21,8 +22,8 @@ use function file_put_contents;
  * @internal
  */
 #[CoversClass(BenchmarkResultsFile::class)]
-#[CoversClass(BenchmarkResults::class)]
-#[CoversClass(TimeExecuteMemoryUsageIteration::class)]
+#[UsesClass(BenchmarkResults::class)]
+#[UsesClass(TimeExecuteMemoryUsageIteration::class)]
 class BenchmarkResultsFileTest extends TestCase
 {
     protected const jsonExist = '{
@@ -203,25 +204,6 @@ class BenchmarkResultsFileTest extends TestCase
 
     public static function dataProviderForValidator(): Generator
     {
-        /*
-         * '{
-    "foo": {
-        "bar": {
-            "baz": [
-                {
-                    "startMemoryUsage": 10,
-                    "endMemoryUsage": 21,
-                    "startMemoryPeakUsage": 10,
-                    "endMemoryPeakUsage": 10,
-                    "startHrTime": 20.134,
-                    "endHrTime": 22.987,
-                    "numberOfTimes": 1
-                }
-            ]
-        }
-    }
-}'
-         */
         yield 'package version is empty string' => [
             '{
                 "": {

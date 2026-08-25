@@ -8,6 +8,7 @@ use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageTotal;
 use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function round;
@@ -16,8 +17,8 @@ use function round;
  * @internal
  */
 #[CoversClass(BenchmarkResults::class)]
-#[CoversClass(TimeExecuteMemoryUsageIteration::class)]
-#[CoversClass(TimeExecuteMemoryUsageTotal::class)]
+#[UsesClass(TimeExecuteMemoryUsageIteration::class)]
+#[UsesClass(TimeExecuteMemoryUsageTotal::class)]
 class BenchmarkResultsTest extends TestCase
 {
     protected BenchmarkResults $results;

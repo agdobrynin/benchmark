@@ -10,16 +10,17 @@ use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
  */
 #[CoversClass(BenchmarkRunner::class)]
-#[CoversClass(BenchmarkResults::class)]
 #[CoversClass(BenchmarkMethod::class)]
-#[CoversClass(Formatter::class)]
 #[CoversClass(Benchmark::class)]
+#[UsesClass(BenchmarkResults::class)]
+#[UsesClass(Formatter::class)]
 class BenchmarkRunnerSortingAndDescriptionMethodsTest extends TestCase
 {
     protected BenchmarkResults $benchmarkResults;
