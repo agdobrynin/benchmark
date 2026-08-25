@@ -37,12 +37,14 @@
         "fixer" : "./vendor/bin/php-cs-fixer fix",
         "test" : "./vendor/bin/phpunit --testdox --no-coverage",
         "test-cover" : "./vendor/bin/phpunit --coverage-text",
+        "test-cover-html" : "./vendor/bin/phpunit",
         "stat" : "./vendor/bin/phpstan"
     },
     "scripts-descriptions": {
         "fixer": "Run PHP Coding Standards Fixer",
         "test" : "Run Phpunit test without coverage",
-        "test-cover" : "Run Phpunit with class coverage",
+        "test-cover" : "Run Phpunit with class coverage and output results to stdout",
+        "test-cover-html" : "Run Phpunit with class coverage and output results to '.coverage-html' folder",
         "stat" : "Run PHPstan static analyzer"
     }
 }

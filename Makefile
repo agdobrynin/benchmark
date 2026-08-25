@@ -15,7 +15,8 @@ docker-build := docker-compose build -q
 # test command
 phpunit_params ?=
 phpunit-no-coverage := ./vendor/bin/phpunit --no-coverage $(phpunit_params)
-phpunit-coverage := ./vendor/bin/phpunit $(phpunit_params)
+phpunit-coverage := ./vendor/bin/phpunit --coverage-text $(phpunit_params)
+phpunit-coverage-html := ./vendor/bin/phpunit $(phpunit_params)
 
 # analyzer command
 php-stan := ./vendor/bin/phpstan --memory-limit=256M
@@ -61,6 +62,10 @@ test-php85:
 .PHONY: test-cover
 test-cover:
 	$(docker-run) $(phpunit-coverage)
+
+.PHONY: test-cover-html
+test-cover-html:
+	$(docker-run) $(phpunit-coverage-html)
 
 cmd_test_coverage_concrete_php := $(docker-run) $(phpunit-coverage); $(docker-build);
 

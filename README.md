@@ -67,7 +67,6 @@ docker-compose run --rm php vendor/bin/phpunit
 ```shell
 make test-cover
 ```
-> ⛑ The results will be in the `.coverage-html` folder.
 
 #### Static analysis of library code
 
