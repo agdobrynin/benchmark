@@ -13,10 +13,10 @@ docker-run := docker-compose -f docker-compose.yml run -q --rm php
 docker-build := docker-compose build -q
 
 # test command
-phpunit_params ?=
-phpunit-no-coverage := ./vendor/bin/phpunit --no-coverage $(phpunit_params)
-phpunit-coverage := ./vendor/bin/phpunit --coverage-text $(phpunit_params)
-phpunit-coverage-html := ./vendor/bin/phpunit $(phpunit_params)
+PHPUNIT-PARAMS ?=
+phpunit-no-coverage := ./vendor/bin/phpunit --no-coverage $(PHPUNIT-PARAMS)
+phpunit-coverage := ./vendor/bin/phpunit --coverage-text $(PHPUNIT-PARAMS)
+phpunit-coverage-html := ./vendor/bin/phpunit $(PHPUNIT-PARAMS)
 
 # analyzer command
 php-stan := ./vendor/bin/phpstan --memory-limit=256M
