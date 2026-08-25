@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Tests\BenchmarkAbstract;
+namespace Kaspi\Benchmark\Tests\BenchmarkRunner;
 
 use Generator;
 use InvalidArgumentException;
@@ -12,19 +12,20 @@ use Kaspi\Benchmark\Attributes\Benchmark;
 use Kaspi\Benchmark\Attributes\Iterations;
 use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
-use Kaspi\Benchmark\BenchmarkAbstract;
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 /**
  * @internal
  */
 #[CoversClass(BenchmarkResults::class)]
-#[CoversClass(BenchmarkAbstract::class)]
+#[CoversClass(BenchmarkRunner::class)]
 #[CoversClass(Benchmark::class)]
 #[CoversClass(Parameters::class)]
 #[CoversClass(BenchmarkMethod::class)]
@@ -34,7 +35,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Iterations::class)]
 #[CoversClass(NumberOfTimes::class)]
 #[CoversClass(Formatter::class)]
-class BenchmarkRunBenchmarkAbstractTest extends TestCase
+class BenchmarkRunBenchmarkTest extends TestCase
 {
     protected BenchmarkResults $benchmarkResults;
 
@@ -49,7 +50,7 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('provideParams() must be return an array or Generator, got string');
 
-        $class = new class($this->benchmarkResults, false) extends BenchmarkAbstract {
+        $class = new class {
             #[Benchmark('do nothing')]
             #[Parameters([self::class, 'provideParams'])]
             public function doBenchOne(string $param): void {}
@@ -60,7 +61,9 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
             }
         };
 
-        $class->doBenchmarks();
+        (new BenchmarkRunner($this->benchmarkResults, $class, false))
+            ->doBenchmarks()
+        ;
     }
 
     public function testRunBenchmarkInvalidParametersParameterGroupNameIsEmptyString(): void
@@ -68,7 +71,7 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The parameter group name in the parameter source');
 
-        $class = new class($this->benchmarkResults, false) extends BenchmarkAbstract {
+        $class = new class {
             #[Benchmark('do nothing')]
             #[Parameters([self::class, 'provideParams'])]
             public function doBenchOne(string $param): void {}
@@ -81,7 +84,9 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
             }
         };
 
-        $class->doBenchmarks();
+        (new BenchmarkRunner($this->benchmarkResults, $class, false))
+            ->doBenchmarks()
+        ;
     }
 
     public function testRunBenchmarkInvalidParametersParameterGroupNameNotUnique(): void
@@ -89,7 +94,7 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The parameter group named "dataset one" is not unique in the parameter source');
 
-        $class = new class($this->benchmarkResults, false) extends BenchmarkAbstract {
+        $class = new class {
             #[Benchmark('do nothing')]
             #[Parameters([self::class, 'provideParams'])]
             public function doBenchOne(string $param): void {}
@@ -102,7 +107,9 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
             }
         };
 
-        $class->doBenchmarks();
+        (new BenchmarkRunner($this->benchmarkResults, $class, false))
+            ->doBenchmarks()
+        ;
     }
 
     public function testRunBenchmarkInvalidParametersParameterGroupMustReturnParamsAsArray(): void
@@ -110,7 +117,7 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('provideParams() must return an array containing the parameters');
 
-        $class = new class($this->benchmarkResults, false) extends BenchmarkAbstract {
+        $class = new class {
             #[Benchmark('do nothing')]
             #[Parameters([self::class, 'provideParams'])]
             public function doBenchOne(string $param): void {}
@@ -121,12 +128,14 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
             }
         };
 
-        $class->doBenchmarks();
+        (new BenchmarkRunner($this->benchmarkResults, $class, false))
+            ->doBenchmarks()
+        ;
     }
 
     public function testRunBenchmarkParametersParameterGroupNameAsIntegerOrString(): void
     {
-        $class = new class($this->benchmarkResults, false) extends BenchmarkAbstract {
+        $class = new class {
             #[Benchmark('do nothing')]
             #[Parameters([self::class, 'provideParams'])]
             public function doBenchOne(string $param): void {}
@@ -141,7 +150,11 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
             }
         };
 
-        $results = $class->doBenchmarks()->getResults();
+        $benchResults = (new BenchmarkRunner($this->benchmarkResults, $class, false))
+            ->doBenchmarks()
+        ;
+
+        $results = $benchResults->getResults();
 
         self::assertTrue($results->valid());
         self::assertEquals('do nothing with parameters name \'Set #0\'', $results->key());
@@ -160,7 +173,7 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
 
     public function testRunBenchmarkInvokeBeforeMethodAndAfterMethodOnBenchMethod(): void
     {
-        $class = new class($this->benchmarkResults, false) extends BenchmarkAbstract {
+        $class = new class {
             public array $methodCalls = [];
 
             #[Benchmark('do nothing')]
@@ -179,14 +192,16 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
             }
         };
 
-        $class->doBenchmarks();
+        (new BenchmarkRunner($this->benchmarkResults, $class, false))
+            ->doBenchmarks()
+        ;
 
         self::assertEquals(['beforeCall', 'afterCall'], $class->methodCalls);
     }
 
     public function testProgressBar(): void
     {
-        $class = new class($this->benchmarkResults, true) extends BenchmarkAbstract {
+        $class = new class {
             #[Benchmark('do nothing')]
             #[Iterations(5)]
             #[NumberOfTimes(2)]
@@ -195,6 +210,18 @@ class BenchmarkRunBenchmarkAbstractTest extends TestCase
 
         $this->expectOutputRegex('/\[bar\] do nothing\..+ \[([=]+)\] 100%/');
 
-        $class->doBenchmarks();
+        (new BenchmarkRunner($this->benchmarkResults, $class, true))
+            ->doBenchmarks()
+        ;
+    }
+
+    public function testEmptyBenchmarkMethods(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Benchmark methods not found in the class');
+
+        (new BenchmarkRunner($this->benchmarkResults, new class {}))
+            ->doBenchmarks()
+        ;
     }
 }

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Tests\BenchmarkAbstract\ConfigureBenchmarks;
+namespace Kaspi\Benchmark\Tests\BenchmarkRunner\ConfigureBenchmarks;
 
 use Generator;
 use InvalidArgumentException;
 use Kaspi\Benchmark\Attributes\Benchmark;
 use Kaspi\Benchmark\Attributes\Parameters;
-use Kaspi\Benchmark\BenchmarkAbstract;
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -18,13 +18,13 @@ use PHPUnit\Framework\TestCase;
 /**
  * @internal
  */
-#[CoversClass(BenchmarkAbstract::class)]
+#[CoversClass(BenchmarkRunner::class)]
 #[CoversClass(BenchmarkResults::class)]
 #[CoversClass(Parameters::class)]
 #[CoversClass(Benchmark::class)]
 #[CoversClass(Formatter::class)]
 #[CoversClass(BenchmarkMethod::class)]
-class BenchmarkAbstractParametersAttributeTest extends TestCase
+class BenchmarkRunnerParametersAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'Parameters for the benchmark method must be of a callable type or a list of callable types';
     protected BenchmarkResults $benchmarkResults;
@@ -46,9 +46,9 @@ class BenchmarkAbstractParametersAttributeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
-        new
-        #[Parameters(['wrong'])]
-        class($this->benchmarkResults) extends BenchmarkAbstract {};
+        $class = new #[Parameters(['wrong'])] class() {};
+
+        new BenchmarkRunner($this->benchmarkResults, $class);
     }
 
     public function testInvalidParametersAttributeOnMethod(): void
@@ -56,22 +56,18 @@ class BenchmarkAbstractParametersAttributeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
-        new class($this->benchmarkResults) extends BenchmarkAbstract {
+        $class = new class {
             #[Benchmark]
             #[Parameters(['wrong'])]
             public function doBenchmark(): void {}
         };
+
+        new BenchmarkRunner($this->benchmarkResults, $class);
     }
 
     public function testParametersAttributeOnClassAndMethod(): void
     {
-        $class = new
-        #[Parameters('\uniqid')]
-        class($this->benchmarkResults) extends BenchmarkAbstract {
-            /** @var list<BenchmarkMethod> */
-            public readonly array $benchmarkMethods;
-            public readonly array $parametersOnClass;
-
+        $class = new #[Parameters('\uniqid')] class() {
             #[Benchmark]
             public function doBenchmarkOne(): void {}
 
@@ -87,15 +83,10 @@ class BenchmarkAbstractParametersAttributeTest extends TestCase
             }
         };
 
-        self::assertCount(1, $class->parametersOnClass);
-        self::assertEquals('\uniqid', $class->parametersOnClass[0]);
+        $runner = new BenchmarkRunner($this->benchmarkResults, $class);
 
-        self::assertCount(2, $class->benchmarkMethods);
-
-        self::assertEquals(['\uniqid'], $class->benchmarkMethods[0]->parameters);
-
-        self::assertCount(2, $class->benchmarkMethods[1]->parameters);
-        self::assertEquals([$class::class, 'fooParams'], $class->benchmarkMethods[1]->parameters[0]);
-        self::assertEquals('\rand', $class->benchmarkMethods[1]->parameters[1]);
+        self::assertEquals(['\uniqid'], $runner->benchmarkMethods[0]->parameters);
+        self::assertEquals([$class::class, 'fooParams'], $runner->benchmarkMethods[1]->parameters[0]);
+        self::assertEquals('\rand', $runner->benchmarkMethods[1]->parameters[1]);
     }
 }

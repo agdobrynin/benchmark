@@ -18,6 +18,7 @@ use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
+use RuntimeException;
 use TypeError;
 
 use function gc_collect_cycles;
@@ -35,120 +36,108 @@ use function usort;
 use function var_export;
 
 /**
+ * @template T of object
+ *
  * @phpstan-import-type ParametersType from Parameters
  * @phpstan-import-type ParametersReturnType from Parameters
  */
-abstract class BenchmarkAbstract
+final class BenchmarkRunner
 {
     /**
      * @var list<BenchmarkMethod>
      */
-    protected readonly array $benchmarkMethods;
+    public readonly array $benchmarkMethods;
 
-    /**
-     * @var ReflectionClass<BenchmarkAbstract>
-     */
-    protected readonly ReflectionClass $reflectionClass;
+    /** @var class-string */
+    private readonly string $benchmarkClassFCQN;
 
     /**
      * @var array<non-empty-string, ReflectionMethod>
      */
-    protected readonly array $reflectionMethods;
-
-    protected readonly int $iterationsOnClass;
-
-    /**
-     * @var list<ReflectionMethod>
-     */
-    protected readonly array $beforeMethodOnClass;
-
-    /**
-     * @var list<ReflectionMethod>
-     */
-    protected readonly array $afterMethodOnClass;
-
-    /**
-     * @var ParametersType
-     */
-    protected readonly array $parametersOnClass;
-
-    protected readonly int $numberOfTimesOnClass;
+    private readonly array $reflectionMethods;
 
     /**
      * @throws InvalidArgumentException
      */
-    final public function __construct(
-        protected readonly BenchmarkResults $benchmarkResults,
-        protected readonly bool $showProgressBar = true,
+    public function __construct(
+        private readonly BenchmarkResults $benchmarkResults,
+        private readonly object $benchmarkClass,
+        private readonly bool $showProgressBar = true,
     ) {
         gc_enable();
 
-        $this->reflectionClass = new ReflectionClass($this);
+        /** @var ReflectionClass<T> $reflectionClass */
+        $reflectionClass = new ReflectionClass($benchmarkClass);
+        $this->benchmarkClassFCQN = $reflectionClass->getName();
 
         // Find available methods
         $reflectionMethods = [];
 
-        foreach ($this->reflectionClass->getMethods() as $reflectionMethod) {
+        foreach ($reflectionClass->getMethods() as $reflectionMethod) {
             $reflectionMethods[$reflectionMethod->getName()] = $reflectionMethod;
         }
 
         $this->reflectionMethods = $reflectionMethods;
 
         /** @var list<ReflectionAttribute<Iterations>> $iterationsOnClassAttributes */
-        $iterationsOnClassAttributes = $this->reflectionClass->getAttributes(Iterations::class);
+        $iterationsOnClassAttributes = $reflectionClass->getAttributes(Iterations::class);
 
-        $this->iterationsOnClass = isset($iterationsOnClassAttributes[0])
+        /** @var positive-int $iterationsOnClass */
+        $iterationsOnClass = isset($iterationsOnClassAttributes[0])
             ? $iterationsOnClassAttributes[0]->newInstance()->iterations
             : 1;
 
         /** @var list<ReflectionAttribute<BeforeMethod>> $beforeMethodOnClassAttributes */
-        $beforeMethodOnClassAttributes = $this->reflectionClass->getAttributes(BeforeMethod::class);
+        $beforeMethodOnClassAttributes = $reflectionClass->getAttributes(BeforeMethod::class);
 
         if (isset($beforeMethodOnClassAttributes[0])) {
             $beforeMethodOnClassAttribute = $beforeMethodOnClassAttributes[0]->newInstance();
 
-            $this->beforeMethodOnClass = [...$this->checkAvailableMethod(
+            /** @var list<ReflectionMethod> $beforeMethodOnClass */
+            $beforeMethodOnClass = [...$this->checkAvailableMethod(
                 (array) $beforeMethodOnClassAttribute->beforeMethod,
                 $beforeMethodOnClassAttribute::class,
                 'beforeMethod',
-                $this->reflectionClass,
+                $reflectionClass,
             )];
         } else {
-            $this->beforeMethodOnClass = [];
+            $beforeMethodOnClass = [];
         }
 
         /** @var list<ReflectionAttribute<AfterMethod>> $afterMethodOnClassAttributes */
-        $afterMethodOnClassAttributes = $this->reflectionClass->getAttributes(AfterMethod::class);
+        $afterMethodOnClassAttributes = $reflectionClass->getAttributes(AfterMethod::class);
 
         if (isset($afterMethodOnClassAttributes[0])) {
             $afterMethodOnClassAttribute = $afterMethodOnClassAttributes[0]->newInstance();
 
-            $this->afterMethodOnClass = [...$this->checkAvailableMethod(
+            /** @var list<ReflectionMethod> $afterMethodOnClass */
+            $afterMethodOnClass = [...$this->checkAvailableMethod(
                 (array) $afterMethodOnClassAttribute->afterMethod,
                 $afterMethodOnClassAttribute::class,
                 'afterMethod',
-                $this->reflectionClass,
+                $reflectionClass,
             )];
         } else {
-            $this->afterMethodOnClass = [];
+            $afterMethodOnClass = [];
         }
 
         /** @var list<ReflectionAttribute<Parameters>> $parametersOnClassAttributes */
-        $parametersOnClassAttributes = $this->reflectionClass->getAttributes(Parameters::class);
+        $parametersOnClassAttributes = $reflectionClass->getAttributes(Parameters::class);
 
-        if (isset($parametersOnClassAttributes[0])) {
-            $this->parametersOnClass = $this->buildParameters($parametersOnClassAttributes[0], $this->reflectionClass);
-        } else {
-            $this->parametersOnClass = [];
-        }
+        /** @var ParametersType $parametersOnClass */
+        $parametersOnClass = isset($parametersOnClassAttributes[0])
+            ? $this->buildParameters($parametersOnClassAttributes[0], $reflectionClass)
+            : [];
 
         /** @var list<ReflectionAttribute<NumberOfTimes>> $numberOfTimesOnClassAttributes */
-        $numberOfTimesOnClassAttributes = $this->reflectionClass->getAttributes(NumberOfTimes::class);
+        $numberOfTimesOnClassAttributes = $reflectionClass->getAttributes(NumberOfTimes::class);
 
-        $this->numberOfTimesOnClass = isset($numberOfTimesOnClassAttributes[0])
+        /** @var positive-int $numberOfTimesOnClass */
+        $numberOfTimesOnClass = isset($numberOfTimesOnClassAttributes[0])
             ? $numberOfTimesOnClassAttributes[0]->newInstance()->numberOfTimes
             : 1;
 
+        /** @var array<string, BenchmarkMethod> $benchmarkMethods */
         $benchmarkMethods = [];
 
         foreach ($this->reflectionMethods as $methodName => $reflectionMethod) {
@@ -176,7 +165,7 @@ abstract class BenchmarkAbstract
 
             $iterations = isset($iterationAttributes[0])
                 ? $iterationAttributes[0]->newInstance()->iterations
-                : $this->iterationsOnClass;
+                : $iterationsOnClass;
 
             /** @var list<ReflectionAttribute<BeforeMethod>> $beforeMethodAttributes */
             $beforeMethodAttributes = $reflectionMethod->getAttributes(BeforeMethod::class);
@@ -188,7 +177,7 @@ abstract class BenchmarkAbstract
                     'beforeMethod',
                     $reflectionMethod,
                 )]
-                : $this->beforeMethodOnClass;
+                : $beforeMethodOnClass;
 
             /** @var list<ReflectionAttribute<AfterMethod>> $afterMethodAttributes */
             $afterMethodAttributes = $reflectionMethod->getAttributes(AfterMethod::class);
@@ -200,21 +189,21 @@ abstract class BenchmarkAbstract
                     'afterMethod',
                     $reflectionMethod,
                 )]
-                : $this->afterMethodOnClass;
+                : $afterMethodOnClass;
 
             /** @var list<ReflectionAttribute<Parameters>> $parametersMethodAttributes */
             $parametersMethodAttributes = $reflectionMethod->getAttributes(Parameters::class);
 
             $parameters = isset($parametersMethodAttributes[0])
                 ? $this->buildParameters($parametersMethodAttributes[0], $reflectionMethod)
-                : $this->parametersOnClass;
+                : $parametersOnClass;
 
             /** @var list<ReflectionAttribute<NumberOfTimes>> $numberOfTimesMethodAttributes */
             $numberOfTimesMethodAttributes = $reflectionMethod->getAttributes(NumberOfTimes::class);
 
             $numberOfTimes = isset($numberOfTimesMethodAttributes[0])
                 ? $numberOfTimesMethodAttributes[0]->newInstance()->numberOfTimes
-                : $this->numberOfTimesOnClass;
+                : $numberOfTimesOnClass;
 
             $benchmarkMethods[] = new BenchmarkMethod(
                 $description,
@@ -237,9 +226,16 @@ abstract class BenchmarkAbstract
 
     /**
      * @throws ReflectionException
+     * @throws RuntimeException    no benchmark methods were found in class
      */
-    final public function doBenchmarks(): BenchmarkResults
+    public function doBenchmarks(): BenchmarkResults
     {
+        if ([] === $this->benchmarkMethods) {
+            throw new RuntimeException(
+                sprintf('Benchmark methods not found in the class %s. Use the PHP attribute %s to configure benchmark methods.', $this->benchmarkClassFCQN, Benchmark::class)
+            );
+        }
+
         $this->benchmarkResults->reset();
 
         /** @var null|string $benchmarkTitle */
@@ -250,7 +246,7 @@ abstract class BenchmarkAbstract
 
             do {
                 foreach ($benchmarkMethod->beforeReflectionMethod as $beforeMethod) {
-                    $beforeMethod->invoke($this);
+                    $beforeMethod->invoke($this->benchmarkClass);
                 }
 
                 if ($args->valid()) {
@@ -279,7 +275,7 @@ abstract class BenchmarkAbstract
 
                     // Execute the target method
                     for ($n = 0; $n < $benchmarkMethod->numberOfTimes; ++$n) {
-                        $benchmarkMethod->targetReflectionMethod->invokeArgs($this, $benchmarkArgs);
+                        $benchmarkMethod->targetReflectionMethod->invokeArgs($this->benchmarkClass, $benchmarkArgs);
                     }
 
                     $timeMemory = new TimeExecuteMemoryUsageIteration(
@@ -303,7 +299,7 @@ abstract class BenchmarkAbstract
                 }
 
                 foreach ($benchmarkMethod->afterReflectionMethod as $afterMethod) {
-                    $afterMethod->invoke($this);
+                    $afterMethod->invoke($this->benchmarkClass);
                 }
 
                 $args->next();
@@ -318,14 +314,14 @@ abstract class BenchmarkAbstract
     }
 
     /**
-     * @param list<non-empty-string>                              $methods
-     * @param ReflectionClass<BenchmarkAbstract>|ReflectionMethod $on
+     * @param list<non-empty-string>              $methods
+     * @param ReflectionClass<T>|ReflectionMethod $on
      *
      * @return Generator<int, ReflectionMethod>
      *
      * @throws InvalidArgumentException
      */
-    final protected function checkAvailableMethod(array $methods, string $classAttribute, string $parameterName, ReflectionClass|ReflectionMethod $on): Generator
+    private function checkAvailableMethod(array $methods, string $classAttribute, string $parameterName, ReflectionClass|ReflectionMethod $on): Generator
     {
         foreach ($methods as $method) {
             if (!is_string($method) || !isset($this->reflectionMethods[$method])) {
@@ -343,14 +339,14 @@ abstract class BenchmarkAbstract
     }
 
     /**
-     * @param ReflectionAttribute<Parameters>                     $parameters
-     * @param ReflectionClass<BenchmarkAbstract>|ReflectionMethod $on
+     * @param ReflectionAttribute<Parameters>     $parameters
+     * @param ReflectionClass<T>|ReflectionMethod $on
      *
      * @return ParametersType
      *
      * @throws InvalidArgumentException
      */
-    final protected function buildParameters(ReflectionAttribute $parameters, ReflectionClass|ReflectionMethod $on): array
+    private function buildParameters(ReflectionAttribute $parameters, ReflectionClass|ReflectionMethod $on): array
     {
         try {
             return $parameters->newInstance()->parameters;
@@ -371,7 +367,7 @@ abstract class BenchmarkAbstract
      *
      * @throws InvalidArgumentException
      */
-    final protected function benchmarkParameters(BenchmarkMethod $benchMethod): Generator
+    private function benchmarkParameters(BenchmarkMethod $benchMethod): Generator
     {
         if ([] === $benchMethod->parameters) {
             return;
@@ -420,7 +416,7 @@ abstract class BenchmarkAbstract
         }
     }
 
-    final protected function callableName(mixed $callable): string
+    private function callableName(mixed $callable): string
     {
         $callableName = '';
         is_callable($callable, true, $callableName);

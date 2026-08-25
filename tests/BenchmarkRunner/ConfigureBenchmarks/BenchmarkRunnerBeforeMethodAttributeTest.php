@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace Kaspi\Benchmark\Tests\BenchmarkAbstract\ConfigureBenchmarks;
+namespace Kaspi\Benchmark\Tests\BenchmarkRunner\ConfigureBenchmarks;
 
 use InvalidArgumentException;
 use Kaspi\Benchmark\Attributes\BeforeMethod;
 use Kaspi\Benchmark\Attributes\Benchmark;
-use Kaspi\Benchmark\BenchmarkAbstract;
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 
 /**
  * @internal
  */
-#[CoversClass(BenchmarkAbstract::class)]
+#[CoversClass(BenchmarkRunner::class)]
+#[CoversClass(Benchmark::class)]
 #[CoversClass(BeforeMethod::class)]
 #[CoversClass(BenchmarkResults::class)]
-#[CoversClass(Benchmark::class)]
+#[CoversClass(BenchmarkRunner::class)]
 #[CoversClass(BenchmarkMethod::class)]
 #[CoversClass(Formatter::class)]
-class BenchmarkAbstractBeforeMethodAttributeTest extends TestCase
+class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'The value of parameter `$beforeMethod` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing class method.';
     protected BenchmarkResults $benchmarkResults;
@@ -46,9 +46,8 @@ class BenchmarkAbstractBeforeMethodAttributeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
-        new
-        #[BeforeMethod('unknownMethod')]
-        class($this->benchmarkResults) extends BenchmarkAbstract {};
+        $class = new #[BeforeMethod('unknownMethod')] class() {};
+        new BenchmarkRunner($this->benchmarkResults, $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnClassEmptyStringMethod(): void
@@ -56,9 +55,8 @@ class BenchmarkAbstractBeforeMethodAttributeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
-        new
-        #[BeforeMethod('')]
-        class($this->benchmarkResults) extends BenchmarkAbstract {};
+        $class = new #[BeforeMethod('')] class() {};
+        new BenchmarkRunner($this->benchmarkResults, $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnClassArrayWithUnknownMethod(): void
@@ -66,9 +64,8 @@ class BenchmarkAbstractBeforeMethodAttributeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
-        new
-        #[BeforeMethod(['unknownMethod'])]
-        class($this->benchmarkResults) extends BenchmarkAbstract {};
+        $class = new #[BeforeMethod(['unknownMethod'])] class() {};
+        new BenchmarkRunner($this->benchmarkResults, $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnClassArrayWithEmptyString(): void
@@ -76,9 +73,8 @@ class BenchmarkAbstractBeforeMethodAttributeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
-        new
-        #[BeforeMethod([''])]
-        class($this->benchmarkResults) extends BenchmarkAbstract {};
+        $class = new #[BeforeMethod([''])] class() {};
+        new BenchmarkRunner($this->benchmarkResults, $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnMethodUnknownName(): void
@@ -86,24 +82,18 @@ class BenchmarkAbstractBeforeMethodAttributeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
-        new class($this->benchmarkResults) extends BenchmarkAbstract {
+        $class = new class {
             #[Benchmark]
             #[BeforeMethod(['unknownMethod'])]
             public function doBenchmark(): void {}
         };
+
+        new BenchmarkRunner($this->benchmarkResults, $class);
     }
 
     public function testConfiguredBeforeMethodAttributeOnClassAndOnMethods(): void
     {
-        $class = new
-        #[BeforeMethod(['baz'])]
-        class($this->benchmarkResults) extends BenchmarkAbstract {
-            /** @var list<ReflectionMethod> */
-            public readonly array $beforeMethodOnClass;
-
-            /** @var list<BenchmarkMethod> */
-            public readonly array $benchmarkMethods;
-
+        $class = new #[BeforeMethod(['baz'])] class() {
             private function foo(): void {}
 
             protected function bar(): void {}
@@ -113,15 +103,20 @@ class BenchmarkAbstractBeforeMethodAttributeTest extends TestCase
             #[Benchmark]
             #[BeforeMethod(['foo', 'bar'])]
             public function doBenchQux(): void {}
+
+            #[Benchmark]
+            public function doBenchQuz(): void {}
         };
 
-        self::assertCount(1, $class->beforeMethodOnClass);
-        self::assertEquals('baz', $class->beforeMethodOnClass[0]->name);
+        $runner = new BenchmarkRunner($this->benchmarkResults, $class);
 
-        self::assertCount(1, $class->benchmarkMethods);
+        self::assertCount(2, $runner->benchmarkMethods);
 
-        self::assertCount(2, $class->benchmarkMethods[0]->beforeReflectionMethod);
-        self::assertEquals('foo', $class->benchmarkMethods[0]->beforeReflectionMethod[0]->name);
-        self::assertEquals('bar', $class->benchmarkMethods[0]->beforeReflectionMethod[1]->name);
+        self::assertCount(2, $runner->benchmarkMethods[0]->beforeReflectionMethod);
+        self::assertEquals('foo', $runner->benchmarkMethods[0]->beforeReflectionMethod[0]->name);
+        self::assertEquals('bar', $runner->benchmarkMethods[0]->beforeReflectionMethod[1]->name);
+
+        self::assertCount(1, $runner->benchmarkMethods[1]->beforeReflectionMethod);
+        self::assertEquals('baz', $runner->benchmarkMethods[1]->beforeReflectionMethod[0]->name);
     }
 }
