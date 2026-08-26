@@ -7,6 +7,7 @@ namespace Kaspi\Benchmark\Tests\BenchmarkRunner\ConfigureBenchmarks;
 use Kaspi\Benchmark\Attributes\Benchmark;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
+use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -19,24 +20,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(BenchmarkRunner::class)]
 #[CoversClass(BenchmarkMethod::class)]
 #[CoversClass(Benchmark::class)]
+#[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(Formatter::class)]
 class BenchmarkRunnerSortingAndDescriptionMethodsTest extends TestCase
 {
-    protected BenchmarkResults $benchmarkResults;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->benchmarkResults = new BenchmarkResults('foo', 'bar');
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        unset($this->benchmarkResults);
-    }
-
     public function testSort(): void
     {
         $class = new class {
@@ -50,20 +38,26 @@ class BenchmarkRunnerSortingAndDescriptionMethodsTest extends TestCase
             public function doBenchThree(): void {}
         };
 
-        $runner = new BenchmarkRunner($this->benchmarkResults, $class);
+        $runner = new BenchmarkRunner('foo', $class);
 
-        self::assertCount(3, $runner->benchmarkMethods);
+        self::assertCount(1, $runner->benchmarkGroups);
 
-        self::assertEquals('Do bench two', $runner->benchmarkMethods[0]->description);
-        self::assertEquals('doBenchTwo', $runner->benchmarkMethods[0]->targetReflectionMethod->name);
-        self::assertEquals(3, $runner->benchmarkMethods[0]->priority);
+        $group = $runner->benchmarkGroups[0];
 
-        self::assertEquals('Do bench three', $runner->benchmarkMethods[1]->description);
-        self::assertEquals('doBenchThree', $runner->benchmarkMethods[1]->targetReflectionMethod->name);
-        self::assertEquals(2, $runner->benchmarkMethods[1]->priority);
+        self::assertCount(3, $group->benchmarkMethods);
 
-        self::assertEquals('Lorem ipsum', $runner->benchmarkMethods[2]->description);
-        self::assertEquals('doBenchOne', $runner->benchmarkMethods[2]->targetReflectionMethod->name);
-        self::assertEquals(-1, $runner->benchmarkMethods[2]->priority);
+        $methods = $group->benchmarkMethods;
+
+        self::assertEquals('Do bench two', $methods[0]->description);
+        self::assertEquals('doBenchTwo', $methods[0]->targetReflectionMethod->name);
+        self::assertEquals(3, $methods[0]->priority);
+
+        self::assertEquals('Do bench three', $methods[1]->description);
+        self::assertEquals('doBenchThree', $methods[1]->targetReflectionMethod->name);
+        self::assertEquals(2, $methods[1]->priority);
+
+        self::assertEquals('Lorem ipsum', $methods[2]->description);
+        self::assertEquals('doBenchOne', $methods[2]->targetReflectionMethod->name);
+        self::assertEquals(-1, $methods[2]->priority);
     }
 }

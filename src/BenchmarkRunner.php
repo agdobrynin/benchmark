@@ -9,9 +9,11 @@ use InvalidArgumentException;
 use Kaspi\Benchmark\Attributes\AfterMethod;
 use Kaspi\Benchmark\Attributes\BeforeMethod;
 use Kaspi\Benchmark\Attributes\Benchmark;
+use Kaspi\Benchmark\Attributes\Group;
 use Kaspi\Benchmark\Attributes\Iterations;
 use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
+use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use ReflectionAttribute;
@@ -36,49 +38,150 @@ use function usort;
 use function var_export;
 
 /**
- * @template T of object
- *
  * @phpstan-import-type ParametersType from Parameters
  * @phpstan-import-type ParametersReturnType from Parameters
  */
 final class BenchmarkRunner
 {
-    /**
-     * @var list<BenchmarkMethod>
-     */
-    public readonly array $benchmarkMethods;
+    /** @var list<BenchmarkGroup> */
+    public readonly array $benchmarkGroups;
 
-    /** @var class-string */
-    private readonly string $benchmarkClassFCQN;
+    private bool $showProgressBar = true;
 
     /**
-     * @var array<non-empty-string, ReflectionMethod>
-     */
-    private readonly array $reflectionMethods;
-
-    /**
+     * @param non-empty-string $packageVersion
+     *
      * @throws InvalidArgumentException
      * @throws RuntimeException
      */
     public function __construct(
-        private readonly BenchmarkResults $benchmarkResults,
-        private readonly object $benchmarkClass,
-        private readonly bool $showProgressBar = true,
+        public readonly string $packageVersion,
+        object $benchmarkClass,
+        object ...$_,
     ) {
         gc_enable();
 
-        /** @var ReflectionClass<T> $reflectionClass */
-        $reflectionClass = new ReflectionClass($benchmarkClass);
-        $this->benchmarkClassFCQN = $reflectionClass->getName();
+        $benchmarkGroups = [];
 
-        // Find available methods
+        foreach ([$benchmarkClass, ...$_] as $benchmarkObject) {
+            $benchmarkGroups[] = $this->configureBenchmarkGroup($benchmarkObject);
+        }
+
+        $this->benchmarkGroups = $benchmarkGroups;
+    }
+
+    /**
+     * @return $this
+     */
+    public function showProgressBar(bool $val): self
+    {
+        $this->showProgressBar = $val;
+
+        return $this;
+    }
+
+    /**
+     * @return Generator<BenchmarkResults>
+     *
+     * @throws ReflectionException
+     * @throws RuntimeException    no benchmark methods were found in class
+     */
+    public function doBenchmarks(): Generator
+    {
+        foreach ($this->benchmarkGroups as $benchmarkGroup) {
+            if ([] === $benchmarkGroup->benchmarkMethods) {
+                throw new RuntimeException(
+                    sprintf('Benchmark methods not found in the class %s. Use the PHP attribute %s to configure benchmark methods.', $benchmarkGroup->benchmarkObject::class, Benchmark::class)
+                );
+            }
+
+            /** @var null|string $benchmarkTitle */
+            $benchmarkTitle = null;
+            $benchmarkResults = new BenchmarkResults($this->packageVersion, $benchmarkGroup->name);
+
+            foreach ($benchmarkGroup->benchmarkMethods as $benchmarkMethod) {
+                $args = $this->benchmarkParameters($benchmarkMethod);
+
+                do {
+                    foreach ($benchmarkMethod->beforeReflectionMethod as $beforeMethod) {
+                        $beforeMethod->invoke($benchmarkGroup->benchmarkObject);
+                    }
+
+                    if ($args->valid()) {
+                        $benchmarkArgs = $args->current();
+                        $benchmarkDescription = sprintf('%s with parameters name %s', $benchmarkMethod->description, var_export($args->key(), true));
+                    } else {
+                        $benchmarkArgs = [];
+                        $benchmarkDescription = $benchmarkMethod->description;
+                    }
+
+                    if ($this->showProgressBar) {
+                        echo "\n";
+                        $benchmarkTitle = sprintf('[%s] %s', $benchmarkResults->groupName, $benchmarkDescription);
+                    }
+
+                    for ($i = 1; $i <= $benchmarkMethod->iterations; ++$i) {
+                        if (null !== $benchmarkTitle) {
+                            Formatter::progressBar($benchmarkTitle, $i, $benchmarkMethod->iterations, sizeBar: 33);
+                        }
+
+                        gc_collect_cycles();
+
+                        $startMemoryUsage = memory_get_usage();
+                        $startPeakUsage = memory_get_peak_usage();
+                        $startHrTime = hrtime(true);
+
+                        // Execute the target method
+                        for ($n = 0; $n < $benchmarkMethod->numberOfTimes; ++$n) {
+                            $benchmarkMethod->targetReflectionMethod->invokeArgs($benchmarkGroup->benchmarkObject, $benchmarkArgs);
+                        }
+
+                        $timeMemory = new TimeExecuteMemoryUsageIteration(
+                            $startMemoryUsage,
+                            memory_get_usage(),
+                            $startPeakUsage,
+                            memory_get_peak_usage(),
+                            $startHrTime,
+                            hrtime(true),
+                            $benchmarkMethod->numberOfTimes,
+                        );
+
+                        $benchmarkResults->attachIteration(
+                            $benchmarkDescription,
+                            $timeMemory
+                        );
+                    }
+
+                    if ($this->showProgressBar) {
+                        echo "\n";
+                    }
+
+                    foreach ($benchmarkMethod->afterReflectionMethod as $afterMethod) {
+                        $afterMethod->invoke($benchmarkGroup->benchmarkObject);
+                    }
+
+                    $args->next();
+                } while ($args->valid());
+            }
+
+            if ($this->showProgressBar) {
+                echo "\n";
+            }
+
+            yield $benchmarkResults;
+        }
+    }
+
+    private function configureBenchmarkGroup(object $benchmarkObject): BenchmarkGroup
+    {
+        $reflectionClass = new ReflectionClass($benchmarkObject);
+
+        /** @var array<non-empty-string, ReflectionMethod> $reflectionMethods */
         $reflectionMethods = [];
 
         foreach ($reflectionClass->getMethods() as $reflectionMethod) {
             $reflectionMethods[$reflectionMethod->getName()] = $reflectionMethod;
         }
-
-        $this->reflectionMethods = $reflectionMethods;
 
         /** @var list<ReflectionAttribute<Iterations>> $iterationsOnClassAttributes */
         $iterationsOnClassAttributes = $reflectionClass->getAttributes(Iterations::class);
@@ -95,11 +198,12 @@ final class BenchmarkRunner
             $beforeMethodOnClassAttribute = $beforeMethodOnClassAttributes[0]->newInstance();
 
             /** @var list<ReflectionMethod> $beforeMethodOnClass */
-            $beforeMethodOnClass = [...$this->checkAvailableMethod(
+            $beforeMethodOnClass = [...$this->findAvailableMethods(
+                $reflectionMethods,
                 (array) $beforeMethodOnClassAttribute->beforeMethod,
                 $beforeMethodOnClassAttribute::class,
                 'beforeMethod',
-                $reflectionClass,
+                $reflectionClass->getName().'::class',
             )];
         } else {
             $beforeMethodOnClass = [];
@@ -112,11 +216,12 @@ final class BenchmarkRunner
             $afterMethodOnClassAttribute = $afterMethodOnClassAttributes[0]->newInstance();
 
             /** @var list<ReflectionMethod> $afterMethodOnClass */
-            $afterMethodOnClass = [...$this->checkAvailableMethod(
+            $afterMethodOnClass = [...$this->findAvailableMethods(
+                $reflectionMethods,
                 (array) $afterMethodOnClassAttribute->afterMethod,
                 $afterMethodOnClassAttribute::class,
                 'afterMethod',
-                $reflectionClass,
+                $reflectionClass->getName().'::class',
             )];
         } else {
             $afterMethodOnClass = [];
@@ -127,7 +232,7 @@ final class BenchmarkRunner
 
         /** @var ParametersType $parametersOnClass */
         $parametersOnClass = isset($parametersOnClassAttributes[0])
-            ? $this->buildParameters($parametersOnClassAttributes[0], $reflectionClass)
+            ? $this->buildParameters($parametersOnClassAttributes[0], $reflectionClass->getName().'::class')
             : [];
 
         /** @var list<ReflectionAttribute<NumberOfTimes>> $numberOfTimesOnClassAttributes */
@@ -141,7 +246,7 @@ final class BenchmarkRunner
         /** @var array<string, BenchmarkMethod> $benchmarkMethods */
         $benchmarkMethods = [];
 
-        foreach ($this->reflectionMethods as $methodName => $reflectionMethod) {
+        foreach ($reflectionMethods as $methodName => $reflectionMethod) {
             $attribute = $reflectionMethod->getAttributes(Benchmark::class)[0] ?? null;
 
             if (null === $attribute) {
@@ -174,11 +279,12 @@ final class BenchmarkRunner
             $beforeMethodAttributes = $reflectionMethod->getAttributes(BeforeMethod::class);
 
             $beforeMethods = isset($beforeMethodAttributes[0])
-                ? [...$this->checkAvailableMethod(
+                ? [...$this->findAvailableMethods(
+                    $reflectionMethods,
                     (array) $beforeMethodAttributes[0]->newInstance()->beforeMethod,
                     BeforeMethod::class,
                     'beforeMethod',
-                    $reflectionMethod,
+                    $reflectionClass->getName().'::'.$reflectionMethod->getName().'()',
                 )]
                 : $beforeMethodOnClass;
 
@@ -186,11 +292,12 @@ final class BenchmarkRunner
             $afterMethodAttributes = $reflectionMethod->getAttributes(AfterMethod::class);
 
             $afterMethods = isset($afterMethodAttributes[0])
-                ? [...$this->checkAvailableMethod(
+                ? [...$this->findAvailableMethods(
+                    $reflectionMethods,
                     (array) $afterMethodAttributes[0]->newInstance()->afterMethod,
                     AfterMethod::class,
                     'afterMethod',
-                    $reflectionMethod,
+                    $reflectionClass->getName().'::'.$reflectionMethod->getName().'()',
                 )]
                 : $afterMethodOnClass;
 
@@ -198,7 +305,7 @@ final class BenchmarkRunner
             $parametersMethodAttributes = $reflectionMethod->getAttributes(Parameters::class);
 
             $parameters = isset($parametersMethodAttributes[0])
-                ? $this->buildParameters($parametersMethodAttributes[0], $reflectionMethod)
+                ? $this->buildParameters($parametersMethodAttributes[0], $reflectionClass->getName().'::'.$reflectionMethod->getName().'()')
                 : $parametersOnClass;
 
             /** @var list<ReflectionAttribute<NumberOfTimes>> $numberOfTimesMethodAttributes */
@@ -224,140 +331,51 @@ final class BenchmarkRunner
             return $b->priority <=> $a->priority;
         });
 
-        $this->benchmarkMethods = $benchmarkMethods;
+        /** @var list<ReflectionAttribute<Group>> $groupAttributes */
+        $groupAttributes = $reflectionClass->getAttributes(Group::class);
+
+        $groupName = isset($groupAttributes[0])
+            ? $groupAttributes[0]->newInstance()->name
+            : Formatter::methodToHuman($reflectionClass->getShortName());
+
+        return new BenchmarkGroup($groupName, $benchmarkMethods, $benchmarkObject);
     }
 
     /**
-     * @throws ReflectionException
-     * @throws RuntimeException    no benchmark methods were found in class
-     */
-    public function doBenchmarks(): BenchmarkResults
-    {
-        if ([] === $this->benchmarkMethods) {
-            throw new RuntimeException(
-                sprintf('Benchmark methods not found in the class %s. Use the PHP attribute %s to configure benchmark methods.', $this->benchmarkClassFCQN, Benchmark::class)
-            );
-        }
-
-        $this->benchmarkResults->reset();
-
-        /** @var null|string $benchmarkTitle */
-        $benchmarkTitle = null;
-
-        foreach ($this->benchmarkMethods as $benchmarkMethod) {
-            $args = $this->benchmarkParameters($benchmarkMethod);
-
-            do {
-                foreach ($benchmarkMethod->beforeReflectionMethod as $beforeMethod) {
-                    $beforeMethod->invoke($this->benchmarkClass);
-                }
-
-                if ($args->valid()) {
-                    $benchmarkArgs = $args->current();
-                    $benchmarkDescription = sprintf('%s with parameters name %s', $benchmarkMethod->description, var_export($args->key(), true));
-                } else {
-                    $benchmarkArgs = [];
-                    $benchmarkDescription = $benchmarkMethod->description;
-                }
-
-                if ($this->showProgressBar) {
-                    echo "\n";
-                    $benchmarkTitle = sprintf('[%s] %s', $this->benchmarkResults->groupName, $benchmarkDescription);
-                }
-
-                for ($i = 1; $i <= $benchmarkMethod->iterations; ++$i) {
-                    if (null !== $benchmarkTitle) {
-                        Formatter::progressBar($benchmarkTitle, $i, $benchmarkMethod->iterations, sizeBar: 33);
-                    }
-
-                    gc_collect_cycles();
-
-                    $startMemoryUsage = memory_get_usage();
-                    $startPeakUsage = memory_get_peak_usage();
-                    $startHrTime = hrtime(true);
-
-                    // Execute the target method
-                    for ($n = 0; $n < $benchmarkMethod->numberOfTimes; ++$n) {
-                        $benchmarkMethod->targetReflectionMethod->invokeArgs($this->benchmarkClass, $benchmarkArgs);
-                    }
-
-                    $timeMemory = new TimeExecuteMemoryUsageIteration(
-                        $startMemoryUsage,
-                        memory_get_usage(),
-                        $startPeakUsage,
-                        memory_get_peak_usage(),
-                        $startHrTime,
-                        hrtime(true),
-                        $benchmarkMethod->numberOfTimes,
-                    );
-
-                    $this->benchmarkResults->attachIteration(
-                        $benchmarkDescription,
-                        $timeMemory
-                    );
-                }
-
-                if ($this->showProgressBar) {
-                    echo "\n";
-                }
-
-                foreach ($benchmarkMethod->afterReflectionMethod as $afterMethod) {
-                    $afterMethod->invoke($this->benchmarkClass);
-                }
-
-                $args->next();
-            } while ($args->valid());
-        }
-
-        if ($this->showProgressBar) {
-            echo "\n";
-        }
-
-        return $this->benchmarkResults;
-    }
-
-    /**
-     * @param list<non-empty-string>              $methods
-     * @param ReflectionClass<T>|ReflectionMethod $on
+     * @param array<non-empty-string, ReflectionMethod> $methods
+     * @param list<non-empty-string>                    $requiredMethods
+     * @param non-empty-string                          $onName
      *
      * @return Generator<int, ReflectionMethod>
      *
      * @throws InvalidArgumentException
      */
-    private function checkAvailableMethod(array $methods, string $classAttribute, string $parameterName, ReflectionClass|ReflectionMethod $on): Generator
+    private function findAvailableMethods(array $methods, array $requiredMethods, string $classAttribute, string $parameterName, string $onName): Generator
     {
-        foreach ($methods as $method) {
-            if (!is_string($method) || !isset($this->reflectionMethods[$method])) {
-                $onName = $on instanceof ReflectionClass
-                    ? $on->getName().'::class'
-                    : $on->getDeclaringClass()->getName().'::'.$on->getName().'()';
-
+        foreach ($requiredMethods as $method) {
+            if (!is_string($method) || !isset($methods[$method])) {
                 throw new InvalidArgumentException(
                     sprintf('Attribute `%s` failed validation for `%s`. The value of parameter `$%s` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing class method. Value received: %s.', $classAttribute, $onName, $parameterName, var_export($method, true))
                 );
             }
 
-            yield $this->reflectionMethods[$method];
+            yield $methods[$method];
         }
     }
 
     /**
-     * @param ReflectionAttribute<Parameters>     $parameters
-     * @param ReflectionClass<T>|ReflectionMethod $on
+     * @param ReflectionAttribute<Parameters> $parameters
+     * @param non-empty-string                $onName
      *
      * @return ParametersType
      *
      * @throws InvalidArgumentException
      */
-    private function buildParameters(ReflectionAttribute $parameters, ReflectionClass|ReflectionMethod $on): array
+    private function buildParameters(ReflectionAttribute $parameters, string $onName): array
     {
         try {
             return $parameters->newInstance()->parameters;
         } catch (TypeError $error) {
-            $onName = $on instanceof ReflectionClass
-                ? $on->getName().'::class'
-                : $on->getDeclaringClass()->getName().'::'.$on->getName().'()';
-
             throw new InvalidArgumentException(
                 sprintf('The attribute `%s` failed validation for the %s. Reason by: %s', Parameters::class, $onName, $error->getMessage()),
                 previous: $error,

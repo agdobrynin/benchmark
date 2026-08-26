@@ -10,6 +10,7 @@ use Kaspi\Benchmark\Attributes\Benchmark;
 use Kaspi\Benchmark\Attributes\Parameters;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
+use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -24,23 +25,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Benchmark::class)]
 #[CoversClass(BenchmarkMethod::class)]
 #[UsesClass(Formatter::class)]
+#[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(BenchmarkResults::class)]
 class BenchmarkRunnerParametersAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'Parameters for the benchmark method must be of a callable type or a list of callable types';
-    protected BenchmarkResults $benchmarkResults;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->benchmarkResults = new BenchmarkResults('foo', 'bar');
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        unset($this->benchmarkResults);
-    }
 
     public function testInvalidParametersAttributeOnClass(): void
     {
@@ -49,7 +38,7 @@ class BenchmarkRunnerParametersAttributeTest extends TestCase
 
         $class = new #[Parameters(['wrong'])] class() {};
 
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testInvalidParametersAttributeOnMethod(): void
@@ -63,7 +52,7 @@ class BenchmarkRunnerParametersAttributeTest extends TestCase
             public function doBenchmark(): void {}
         };
 
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testParametersAttributeOnClassAndMethod(): void
@@ -84,10 +73,19 @@ class BenchmarkRunnerParametersAttributeTest extends TestCase
             }
         };
 
-        $runner = new BenchmarkRunner($this->benchmarkResults, $class);
+        $runner = new BenchmarkRunner('foo', $class);
 
-        self::assertEquals(['\uniqid'], $runner->benchmarkMethods[0]->parameters);
-        self::assertEquals([$class::class, 'fooParams'], $runner->benchmarkMethods[1]->parameters[0]);
-        self::assertEquals('\rand', $runner->benchmarkMethods[1]->parameters[1]);
+        self::assertCount(1, $runner->benchmarkGroups);
+
+        $group = $runner->benchmarkGroups[0];
+
+        self::assertCount(2, $group->benchmarkMethods);
+
+        $methods = $group->benchmarkMethods;
+
+        self::assertEquals(['\uniqid'], $methods[0]->parameters);
+
+        self::assertEquals([$class::class, 'fooParams'], $methods[1]->parameters[0]);
+        self::assertEquals('\rand', $methods[1]->parameters[1]);
     }
 }

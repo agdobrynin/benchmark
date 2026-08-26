@@ -1,0 +1,60 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Kaspi\Benchmark\Tests\BenchmarkRunner\ConfigureBenchmarks;
+
+use Kaspi\Benchmark\Attributes\Benchmark;
+use Kaspi\Benchmark\Attributes\Group;
+use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\BenchmarkRunner;
+use Kaspi\Benchmark\DTO\BenchmarkGroup;
+use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\Formatter;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * @internal
+ */
+#[CoversClass(Benchmark::class)]
+#[CoversClass(Group::class)]
+#[CoversClass(BenchmarkRunner::class)]
+#[CoversClass(BenchmarkGroup::class)]
+#[UsesClass(BenchmarkResults::class)]
+#[UsesClass(BenchmarkMethod::class)]
+#[UsesClass(Formatter::class)]
+class BenchmarkRunnerBenchmarkGroupTest extends TestCase
+{
+    public function testBenchmarkRunnerGroup(): void
+    {
+        $classFoo = new #[Group('Foo description')] class() {
+            #[Benchmark]
+            public function doNothingOne(): void {}
+
+            #[Benchmark]
+            public function doNothingTwo(): void {}
+        };
+
+        $classBar = new #[Group('Bar description')] class() {
+            #[Benchmark]
+            public function doNothingOne(): void {}
+
+            #[Benchmark]
+            public function doNothingTwo(): void {}
+        };
+
+        $runner = new BenchmarkRunner('v0.0.1', $classFoo, $classBar);
+
+        $runner->doBenchmarks();
+
+        self::assertCount(2, $runner->benchmarkGroups);
+
+        $group1 = $runner->benchmarkGroups[0];
+        self::assertEquals('Foo description', $group1->name);
+
+        $group2 = $runner->benchmarkGroups[1];
+        self::assertEquals('Bar description', $group2->name);
+    }
+}

@@ -9,6 +9,7 @@ use Kaspi\Benchmark\Attributes\BeforeMethod;
 use Kaspi\Benchmark\Attributes\Benchmark;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
+use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -22,24 +23,12 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(BenchmarkMethod::class)]
 #[CoversClass(Benchmark::class)]
 #[CoversClass(BeforeMethod::class)]
+#[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(Formatter::class)]
 class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'The value of parameter `$beforeMethod` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing class method.';
-    protected BenchmarkResults $benchmarkResults;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->benchmarkResults = new BenchmarkResults('foo', 'bar');
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        unset($this->benchmarkResults);
-    }
 
     public function testInvalidBeforeMethodAttributeOnClassUnknownMethod(): void
     {
@@ -47,7 +36,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[BeforeMethod('unknownMethod')] class() {};
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnClassEmptyStringMethod(): void
@@ -56,7 +45,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[BeforeMethod('')] class() {};
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnClassArrayWithUnknownMethod(): void
@@ -65,7 +54,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[BeforeMethod(['unknownMethod'])] class() {};
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnClassArrayWithEmptyString(): void
@@ -74,7 +63,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[BeforeMethod([''])] class() {};
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnMethodUnknownName(): void
@@ -88,7 +77,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
             public function doBenchmark(): void {}
         };
 
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testConfiguredBeforeMethodAttributeOnClassAndOnMethods(): void
@@ -108,15 +97,20 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
             public function doBenchQuz(): void {}
         };
 
-        $runner = new BenchmarkRunner($this->benchmarkResults, $class);
+        $runner = new BenchmarkRunner('foo', $class);
 
-        self::assertCount(2, $runner->benchmarkMethods);
+        self::assertCount(1, $runner->benchmarkGroups);
+        self::assertCount(2, $runner->benchmarkGroups[0]->benchmarkMethods);
 
-        self::assertCount(2, $runner->benchmarkMethods[0]->beforeReflectionMethod);
-        self::assertEquals('foo', $runner->benchmarkMethods[0]->beforeReflectionMethod[0]->name);
-        self::assertEquals('bar', $runner->benchmarkMethods[0]->beforeReflectionMethod[1]->name);
+        $methods = $runner->benchmarkGroups[0]->benchmarkMethods;
 
-        self::assertCount(1, $runner->benchmarkMethods[1]->beforeReflectionMethod);
-        self::assertEquals('baz', $runner->benchmarkMethods[1]->beforeReflectionMethod[0]->name);
+        self::assertCount(2, $methods[0]->beforeReflectionMethod);
+        self::assertEquals('foo', $methods[0]->beforeReflectionMethod[0]->name);
+        self::assertEquals('bar', $methods[0]->beforeReflectionMethod[1]->name);
+
+        $groups2 = $runner->benchmarkGroups[1];
+
+        self::assertCount(1, $methods[1]->beforeReflectionMethod);
+        self::assertEquals('baz', $methods[1]->beforeReflectionMethod[0]->name);
     }
 }

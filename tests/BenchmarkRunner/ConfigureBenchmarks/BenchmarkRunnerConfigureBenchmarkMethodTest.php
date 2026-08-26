@@ -27,7 +27,7 @@ class BenchmarkRunnerConfigureBenchmarkMethodTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('must be declared with public and non-static modifiers.');
 
-        new BenchmarkRunner(new BenchmarkResults('foo', 'bar'), $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public static function dataProvider(): Generator

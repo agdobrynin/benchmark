@@ -9,6 +9,7 @@ use Kaspi\Benchmark\Attributes\AfterMethod;
 use Kaspi\Benchmark\Attributes\Benchmark;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
+use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -24,24 +25,12 @@ use function array_column;
 #[CoversClass(Benchmark::class)]
 #[CoversClass(AfterMethod::class)]
 #[CoversClass(BenchmarkMethod::class)]
+#[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(Formatter::class)]
 class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'The value of parameter `$afterMethod` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing class method.';
-    protected BenchmarkResults $benchmarkResults;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->benchmarkResults = new BenchmarkResults('foo', 'bar');
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        unset($this->benchmarkResults);
-    }
 
     public function testInvalidAfterMethodAttributeOnClassUnknownMethod(): void
     {
@@ -49,7 +38,7 @@ class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[AfterMethod('unknownMethod')] class() {};
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testInvalidAfterMethodAttributeOnClassEmptyStringMethod(): void
@@ -58,7 +47,7 @@ class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[AfterMethod('')] class() {};
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testInvalidAfterMethodAttributeOnClassArrayWithUnknownMethod(): void
@@ -67,7 +56,7 @@ class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[AfterMethod(['unknownMethod'])] class() {};
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testInvalidAfterMethodAttributeOnClassArrayWithEmptyString(): void
@@ -76,7 +65,7 @@ class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[AfterMethod([''])] class {};
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testInvalidAfterMethodAttributeOnMethodUnknownName(): void
@@ -90,7 +79,7 @@ class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
             public function doBenchmark(): void {}
         };
 
-        new BenchmarkRunner($this->benchmarkResults, $class);
+        new BenchmarkRunner('foo', $class);
     }
 
     public function testConfiguredAfterMethodAttributeOnClassOnly(): void
@@ -106,11 +95,11 @@ class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
             public function doBench(): void {}
         };
 
-        $runner = new BenchmarkRunner($this->benchmarkResults, $class);
+        $runner = new BenchmarkRunner('foo', $class);
 
-        self::assertCount(1, $runner->benchmarkMethods);
-        self::assertEquals(['foo', 'bar', 'baz'], array_column($runner->benchmarkMethods[0]->afterReflectionMethod, 'name'));
-        self::assertCount(0, $runner->benchmarkMethods[0]->beforeReflectionMethod);
+        self::assertCount(1, $runner->benchmarkGroups);
+        self::assertEquals(['foo', 'bar', 'baz'], array_column($runner->benchmarkGroups[0]->benchmarkMethods[0]->afterReflectionMethod, 'name'));
+        self::assertCount(0, $runner->benchmarkGroups[0]->benchmarkMethods[0]->beforeReflectionMethod);
     }
 
     public function testConfiguredAfterMethodAttributeOnClassAndOnMethods(): void
@@ -127,11 +116,11 @@ class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
             public function doBenchQux(): void {}
         };
 
-        $runner = new BenchmarkRunner($this->benchmarkResults, $class);
+        $runner = new BenchmarkRunner('foo', $class);
 
-        self::assertCount(1, $runner->benchmarkMethods);
-        $methods = array_column($runner->benchmarkMethods[0]->afterReflectionMethod, 'name');
+        self::assertCount(1, $runner->benchmarkGroups);
+        $methods = array_column($runner->benchmarkGroups[0]->benchmarkMethods[0]->afterReflectionMethod, 'name');
         self::assertEquals(['foo', 'bar'], $methods);
-        self::assertCount(0, $runner->benchmarkMethods[0]->beforeReflectionMethod);
+        self::assertCount(0, $runner->benchmarkGroups[0]->benchmarkMethods[0]->beforeReflectionMethod);
     }
 }
