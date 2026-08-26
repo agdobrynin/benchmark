@@ -1,12 +1,8 @@
 # Simple benchmarking library
+This library allows you to compare the performance of different versions of the  ["kaspi/di-container"](https://github.com/agdobrynin/di-container) package.
 
-## Install the library
-
-```shell
-composer require kaspi/benchmark
-```
-
-## How to use the library
+### How to use the library
+Up-to-date performance comparison results for the ["kaspi/di-container"](https://github.com/agdobrynin/di-container) package using this library can be found in the [kaspi-di-container-bench](https://github.com/agdobrynin/kaspi-di-container-bench) repository.
 
 ## Library development
 
