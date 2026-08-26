@@ -1,7 +1,7 @@
 {
     "name": "kaspi/benchmark",
     "description": "Simple benchmarking library",
-    "keywords": ["benchmarking", "optimization", "performance", "testing"],
+    "keywords": ["benchmarking", "optimization", "performance"],
     "type": "library",
     "require": {
         "php": "8.1 - 8.5",
