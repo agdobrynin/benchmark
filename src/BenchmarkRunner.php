@@ -58,6 +58,7 @@ final class BenchmarkRunner
 
     /**
      * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
     public function __construct(
         private readonly BenchmarkResults $benchmarkResults,
@@ -141,15 +142,17 @@ final class BenchmarkRunner
         $benchmarkMethods = [];
 
         foreach ($this->reflectionMethods as $methodName => $reflectionMethod) {
-            // Benchmark method must be declared with modifier public and non-static
-            if (!$reflectionMethod->isPublic() || $reflectionMethod->isStatic()) {
-                continue;
-            }
-
             $attribute = $reflectionMethod->getAttributes(Benchmark::class)[0] ?? null;
 
             if (null === $attribute) {
                 continue;
+            }
+
+            // Benchmark method must be declared with modifier public and non-static
+            if (!$reflectionMethod->isPublic() || $reflectionMethod->isStatic()) {
+                throw new RuntimeException(
+                    sprintf('Benchmark method %s::%s() must be declared with public and non-static modifiers.', $reflectionMethod->getDeclaringClass()->getName(), $methodName)
+                );
             }
 
             /** @var Benchmark $attributeBenchmark */

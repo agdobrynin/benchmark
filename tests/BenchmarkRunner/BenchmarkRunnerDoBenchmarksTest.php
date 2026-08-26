@@ -36,7 +36,7 @@ use RuntimeException;
 #[UsesClass(Iterations::class)]
 #[UsesClass(NumberOfTimes::class)]
 #[UsesClass(Formatter::class)]
-class BenchmarkRunBenchmarkTest extends TestCase
+class BenchmarkRunnerDoBenchmarksTest extends TestCase
 {
     protected BenchmarkResults $benchmarkResults;
 
