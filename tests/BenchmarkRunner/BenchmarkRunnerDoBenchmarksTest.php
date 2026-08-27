@@ -163,15 +163,15 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
         $results = $benchResults->current()->getResults();
 
         self::assertTrue($results->valid());
-        self::assertEquals('do nothing with parameters name \'Set #0\'', $results->key());
+        self::assertEquals('do nothing with \'Data set #0\'', $results->key());
 
         $results->next();
 
-        self::assertEquals('do nothing with parameters name \'Set #1\'', $results->key());
+        self::assertEquals('do nothing with \'Data set #1\'', $results->key());
 
         $results->next();
 
-        self::assertEquals('do nothing with parameters name \'foo parameter\'', $results->key());
+        self::assertEquals('do nothing with \'foo parameter\'', $results->key());
 
         $results->next();
         self::assertFalse($results->valid());

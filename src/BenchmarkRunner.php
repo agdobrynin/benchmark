@@ -110,7 +110,7 @@ final class BenchmarkRunner
 
                     if ($args->valid()) {
                         $benchmarkArgs = $args->current();
-                        $benchmarkDescription = sprintf('%s with parameters name %s', $benchmarkMethod->description, var_export($args->key(), true));
+                        $benchmarkDescription = sprintf('%s with %s', $benchmarkMethod->description, var_export($args->key(), true));
                     } else {
                         $benchmarkArgs = [];
                         $benchmarkDescription = $benchmarkMethod->description;
@@ -417,7 +417,7 @@ final class BenchmarkRunner
 
             foreach ($gotParameters as $groupName => $args) {
                 $normalizedGroupName = is_int($groupName)
-                    ? 'Set #'.$groupName
+                    ? 'Data set #'.$groupName
                     : $groupName;
 
                 if (!is_string($normalizedGroupName) || '' === $normalizedGroupName) {
