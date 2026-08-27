@@ -213,16 +213,16 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
 
     public function testProgressBar(): void
     {
-        $class = new #[Group('bar')] class {
+        $class = new #[Group('Foo group')] class {
             #[Benchmark('do nothing')]
             #[Iterations(5)]
             #[NumberOfTimes(2)]
             public function doBenchOne(): void {}
         };
 
-        $this->expectOutputRegex('/\[bar\] do nothing\..+ \[([=]+)\] 100%/');
+        $this->expectOutputRegex('/\Rv1\.x-dev \[Foo group\] do nothing\..+ \[([=]+)\] 100%/');
 
-        (new BenchmarkRunner('bar', $class))
+        (new BenchmarkRunner('v1.x-dev', $class))
             ->doBenchmarks()
             ->current()
         ;

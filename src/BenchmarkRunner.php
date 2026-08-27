@@ -118,7 +118,7 @@ final class BenchmarkRunner
 
                     if ($this->showProgressBar) {
                         echo "\n";
-                        $benchmarkTitle = sprintf('[%s] %s', $benchmarkGroup->name, $benchmarkDescription);
+                        $benchmarkTitle = sprintf('%s [%s] %s', $this->packageVersion, $benchmarkGroup->name, $benchmarkDescription);
                     }
 
                     for ($i = 1; $i <= $benchmarkMethod->iterations; ++$i) {
