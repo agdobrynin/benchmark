@@ -57,4 +57,38 @@ class BenchmarkRunnerBenchmarkGroupTest extends TestCase
         $group2 = $runner->benchmarkGroups[1];
         self::assertEquals('Bar description', $group2->name);
     }
+
+    public function testBenchmarkGroupIsEmptyString(): void
+    {
+        $class = new #[Group('')] class() {
+            #[Benchmark]
+            public function doNothing(): void {}
+        };
+
+        $runner = new BenchmarkRunner('v0.0.1', $class);
+
+        self::assertMatchesRegularExpression('/^class@anonymous.+BenchmarkRunnerBenchmarkGroupTest\.php/', $runner->benchmarkGroups[0]->name);
+    }
+
+    public function testBenchmarkGroupNotDefined(): void
+    {
+        $class = new class {
+            #[Benchmark]
+            public function doNothing(): void {}
+        };
+
+        $benchFoo = new BenchFoo();
+
+        $runner = new BenchmarkRunner('v0.0.1', $class, $benchFoo);
+
+        self::assertCount(2, $runner->benchmarkGroups);
+        self::assertMatchesRegularExpression('/^class@anonymous.+BenchmarkRunnerBenchmarkGroupTest\.php/', $runner->benchmarkGroups[0]->name);
+        self::assertEquals('Bench foo', $runner->benchmarkGroups[1]->name);
+    }
+}
+
+final class BenchFoo
+{
+    #[Benchmark]
+    public function doNothing(): void {}
 }

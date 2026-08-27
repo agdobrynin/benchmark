@@ -34,6 +34,7 @@ use function is_string;
 use function memory_get_peak_usage;
 use function memory_get_usage;
 use function sprintf;
+use function str_replace;
 use function usort;
 use function var_export;
 
@@ -334,13 +335,16 @@ final class BenchmarkRunner
         /** @var list<ReflectionAttribute<Group>> $groupAttributes */
         $groupAttributes = $reflectionClass->getAttributes(Group::class);
 
-        $groupNameFromAttribute = isset($groupAttributes[0])
+        $groupName = isset($groupAttributes[0])
             ? $groupAttributes[0]->newInstance()->name
-            : '';
+            : null;
 
-        $groupName = '' === $groupNameFromAttribute
-            ? Formatter::methodToHuman($reflectionClass->getShortName())
-            : $groupNameFromAttribute;
+        if (null === $groupName || '' === $groupName) {
+            /** @var non-empty-string $groupName */
+            $groupName = $reflectionClass->isAnonymous()
+                ? str_replace("\0", '', $reflectionClass->getShortName())
+                : Formatter::methodToHuman($reflectionClass->getShortName());
+        }
 
         return new BenchmarkGroup($groupName, $benchmarkMethods, $benchmarkObject);
     }
