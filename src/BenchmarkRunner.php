@@ -334,9 +334,13 @@ final class BenchmarkRunner
         /** @var list<ReflectionAttribute<Group>> $groupAttributes */
         $groupAttributes = $reflectionClass->getAttributes(Group::class);
 
-        $groupName = isset($groupAttributes[0])
+        $groupNameFromAttribute = isset($groupAttributes[0])
             ? $groupAttributes[0]->newInstance()->name
-            : Formatter::methodToHuman($reflectionClass->getShortName());
+            : '';
+
+        $groupName = '' === $groupNameFromAttribute
+            ? Formatter::methodToHuman($reflectionClass->getShortName())
+            : $groupNameFromAttribute;
 
         return new BenchmarkGroup($groupName, $benchmarkMethods, $benchmarkObject);
     }
