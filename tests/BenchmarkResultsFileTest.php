@@ -7,7 +7,7 @@ namespace Kaspi\Benchmark\Tests;
 use Generator;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkResultsFile;
-use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
+use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -22,8 +22,8 @@ use function file_put_contents;
  * @internal
  */
 #[CoversClass(BenchmarkResultsFile::class)]
+#[CoversClass(TimeExecuteMemoryUsageInIteration::class)]
 #[UsesClass(BenchmarkResults::class)]
-#[UsesClass(TimeExecuteMemoryUsageIteration::class)]
 class BenchmarkResultsFileTest extends TestCase
 {
     protected const jsonExist = '{
@@ -31,12 +31,11 @@ class BenchmarkResultsFileTest extends TestCase
         "bar": {
             "baz": [
                 {
-                    "startMemoryUsage": 10,
-                    "endMemoryUsage": 21,
-                    "startMemoryPeakUsage": 10,
-                    "endMemoryPeakUsage": 10,
-                    "startHrTime": 20.134,
-                    "endHrTime": 22.987,
+                    "startBytesUsageInIteration": 10,
+                    "endBytesUsageInIteration": 21,
+                    "bytesPeakUsage": 21,
+                    "startTimeInIteration": 20.134,
+                    "endTimeInIteration": 22.987,
                     "numberOfTimes": 1
                 }
             ]
@@ -110,22 +109,29 @@ class BenchmarkResultsFileTest extends TestCase
 
         self::assertEquals('foo', $resExistGet->packageVersion);
         self::assertEquals('bar', $resExistGet->groupName);
-
         $iterations = $resExistGet->getResults();
 
         self::assertTrue($iterations->valid());
 
         self::assertEquals('baz', $iterations->key());
         $items = $iterations->current();
-        self::assertCount(1, $items);
 
-        self::assertEquals(10, $items[0]->startMemoryUsage);
-        self::assertEquals(21, $items[0]->endMemoryUsage);
-        self::assertEquals(10, $items[0]->startMemoryPeakUsage);
-        self::assertEquals(10, $items[0]->endMemoryPeakUsage);
-        self::assertEquals(20.134, $items[0]->startHrTime);
-        self::assertEquals(22.987, $items[0]->endHrTime);
-        self::assertEquals(1, $items[0]->numberOfTimes);
+        self::assertTrue($items->valid());
+
+        $current = $items->current();
+        $key = $items->key();
+
+        self::assertEquals(0, $key);
+        self::assertEquals(10, $current->startBytesUsageInIteration);
+        self::assertEquals(21, $current->endBytesUsageInIteration);
+        self::assertEquals(21, $current->bytesPeakUsage);
+        self::assertEquals(20.134, $current->startTimeInIteration);
+        self::assertEquals(22.987, $current->endTimeInIteration);
+        self::assertEquals(1, $current->numberOfTimes);
+
+        $items->next();
+
+        self::assertFalse($items->valid());
 
         $iterations->next();
 
@@ -135,11 +141,10 @@ class BenchmarkResultsFileTest extends TestCase
         $resSet->attachIterations(
             'baz',
             [
-                new TimeExecuteMemoryUsageIteration(
+                new TimeExecuteMemoryUsageInIteration(
                     11,
                     20,
-                    0,
-                    0,
+                    20,
                     24.222,
                     25.432,
                     2
@@ -167,16 +172,20 @@ class BenchmarkResultsFileTest extends TestCase
         self::assertEquals('baz', $iterations->key());
 
         $items = $iterations->current();
+        self::assertTrue($items->valid());
 
-        self::assertCount(1, $items);
+        /** @var TimeExecuteMemoryUsageInIteration $current */
+        $current = $items->current();
+        $key = $items->key();
 
-        self::assertEquals(11, $items[0]->startMemoryUsage);
-        self::assertEquals(20, $items[0]->endMemoryUsage);
-        self::assertEquals(0, $items[0]->startMemoryPeakUsage);
-        self::assertEquals(0, $items[0]->endMemoryPeakUsage);
-        self::assertEquals(24.222, $items[0]->startHrTime);
-        self::assertEquals(25.432, $items[0]->endHrTime);
-        self::assertEquals(2, $items[0]->numberOfTimes);
+        self::assertEquals(0, $key);
+
+        self::assertEquals(11, $current->startBytesUsageInIteration);
+        self::assertEquals(20, $current->endBytesUsageInIteration);
+        self::assertEquals(20, $current->bytesPeakUsage);
+        self::assertEquals(24.222, $current->startTimeInIteration);
+        self::assertEquals(25.432, $current->endTimeInIteration);
+        self::assertEquals(2, $current->numberOfTimes);
     }
 
     public function testReset(): void

@@ -5,23 +5,20 @@ declare(strict_types=1);
 namespace Kaspi\Benchmark;
 
 use Generator;
-use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageTotal;
-use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
-
-use function count;
-use function current;
+use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
+use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
 
 final class BenchmarkResults
 {
     /**
-     * @var array<non-empty-string, list<TimeExecuteMemoryUsageIteration>>
+     * @var array<non-empty-string, list<TimeExecuteMemoryUsageInIteration>>
      */
     private array $results;
 
     /**
-     * @var array<non-empty-string, TimeExecuteMemoryUsageTotal>
+     * @var array<non-empty-string, BenchmarkTimeExecuteMemoryUsage>
      */
-    private array $timeExecuteMemoryUsingTotalItems;
+    private array $benchmarkTimeExecuteMemoryUsageItems;
 
     /**
      * @param non-empty-string $packageVersion
@@ -37,105 +34,68 @@ final class BenchmarkResults
      *
      * @param non-empty-string $benchmarkDescription
      */
-    public function attachIteration(string $benchmarkDescription, TimeExecuteMemoryUsageIteration $iteration): void
+    public function attachIteration(string $benchmarkDescription, TimeExecuteMemoryUsageInIteration $iteration): void
     {
         $this->results[$benchmarkDescription][] = $iteration;
-        unset($this->timeExecuteMemoryUsingTotalItems);
+        unset($this->benchmarkTimeExecuteMemoryUsageItems);
     }
 
     /**
      * Attaches the collection of results from all iterations for a single benchmark.
      *
-     * @param non-empty-string                      $benchmarkDescription
-     * @param list<TimeExecuteMemoryUsageIteration> $iterations
+     * @param non-empty-string                        $benchmarkDescription
+     * @param list<TimeExecuteMemoryUsageInIteration> $iterations
      */
     public function attachIterations(string $benchmarkDescription, array $iterations): void
     {
         $this->results[$benchmarkDescription] = $iterations;
-        unset($this->timeExecuteMemoryUsingTotalItems);
+        unset($this->benchmarkTimeExecuteMemoryUsageItems);
     }
 
     /**
-     * A key of array benchmark description.
+     * Generator key - benchmark description.
      *
-     * @return Generator<non-empty-string, list<TimeExecuteMemoryUsageIteration>>
+     * @return Generator<non-empty-string, Generator<non-negative-int, TimeExecuteMemoryUsageInIteration>>
      */
     public function getResults(): Generator
     {
-        yield from $this->results ?? [];
+        foreach ($this->results ?? [] as $benchmarkDescription => $iterations) {
+            yield $benchmarkDescription => (static fn () => yield from $iterations)();
+        }
     }
 
     /**
      * A key of array benchmark description.
      *
-     * @return Generator<non-empty-string, TimeExecuteMemoryUsageTotal>
+     * @return Generator<non-empty-string, BenchmarkTimeExecuteMemoryUsage>
      */
-    public function getTimeExecuteMemoryUsingTotalItems(): Generator
+    public function getBenchmarkTimeExecuteMemoryUsageItems(): Generator
     {
-        if (isset($this->timeExecuteMemoryUsingTotalItems)) {
-            yield from $this->timeExecuteMemoryUsingTotalItems;
+        if (isset($this->benchmarkTimeExecuteMemoryUsageItems)) {
+            yield from $this->benchmarkTimeExecuteMemoryUsageItems;
         }
 
-        $this->timeExecuteMemoryUsingTotalItems = [];
+        $this->benchmarkTimeExecuteMemoryUsageItems = [];
 
         /**
-         * @var non-empty-string                      $benchmarkDescription
-         * @var list<TimeExecuteMemoryUsageIteration> $benchmarkResults
+         * @var non-empty-string                        $benchmarkDescription
+         * @var list<TimeExecuteMemoryUsageInIteration> $benchmarkResults
          */
-        foreach ($this->getResults() as $benchmarkDescription => $benchmarkResults) {
-            $total = $this->calculateTotal($benchmarkResults);
+        foreach ($this->results ?? [] as $benchmarkDescription => $benchmarkResults) {
+            $total = new BenchmarkTimeExecuteMemoryUsage($benchmarkResults);
 
-            if (false !== $total) {
-                $this->timeExecuteMemoryUsingTotalItems[$benchmarkDescription] = $total;
+            if (0 < $total->iterations) {
+                $this->benchmarkTimeExecuteMemoryUsageItems[$benchmarkDescription] = $total;
             }
+
+            unset($benchmarkResults);
         }
 
-        yield from $this->timeExecuteMemoryUsingTotalItems;
+        yield from $this->benchmarkTimeExecuteMemoryUsageItems;
     }
 
     public function reset(): void
     {
-        unset($this->results, $this->timeExecuteMemoryUsingTotalItems);
-    }
-
-    /**
-     * @param list<TimeExecuteMemoryUsageIteration> $benchmarkResults
-     */
-    private function calculateTotal(array $benchmarkResults): false|TimeExecuteMemoryUsageTotal
-    {
-        $firstItem = current($benchmarkResults);
-
-        if (false === $firstItem) {
-            return false;
-        }
-
-        $numberOfTimes = $firstItem->numberOfTimes;
-        $iterations = count($benchmarkResults);
-
-        if (1 === $iterations) {
-            return new TimeExecuteMemoryUsageTotal(
-                $firstItem->memoryUsage(),
-                $firstItem->memoryPeakUsage(),
-                $firstItem->hrTime(),
-                $iterations,
-                $numberOfTimes,
-            );
-        }
-
-        $sumMemoryAllocated = $sumMemoryPeak = $sumTime = 0;
-
-        foreach ($benchmarkResults as $benchmarkResult) {
-            $sumMemoryAllocated += $benchmarkResult->memoryUsage();
-            $sumMemoryPeak += $benchmarkResult->memoryPeakUsage();
-            $sumTime += $benchmarkResult->hrTime();
-        }
-
-        return new TimeExecuteMemoryUsageTotal(
-            $sumMemoryAllocated,
-            $sumMemoryPeak,
-            $sumTime,
-            $iterations,
-            $numberOfTimes,
-        );
+        unset($this->results, $this->benchmarkTimeExecuteMemoryUsageItems);
     }
 }

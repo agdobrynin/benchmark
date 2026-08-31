@@ -17,8 +17,8 @@ use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\Formatter;
-use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -34,7 +34,7 @@ use RuntimeException;
 #[UsesClass(Benchmark::class)]
 #[UsesClass(Parameters::class)]
 #[UsesClass(BenchmarkMethod::class)]
-#[UsesClass(TimeExecuteMemoryUsageIteration::class)]
+#[UsesClass(TimeExecuteMemoryUsageInIteration::class)]
 #[UsesClass(AfterMethod::class)]
 #[UsesClass(BeforeMethod::class)]
 #[UsesClass(Iterations::class)]
