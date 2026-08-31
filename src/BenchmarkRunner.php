@@ -136,6 +136,8 @@ final class BenchmarkRunner
                             $benchmarkMethod->targetReflectionMethod->invokeArgs($benchmarkGroup->benchmarkObject, $benchmarkArgs);
                         }
 
+                        gc_collect_cycles();
+
                         $timeMemory = new TimeExecuteMemoryUsageInIteration(
                             $startMemoryUsage,
                             memory_get_usage(),

@@ -8,6 +8,7 @@ use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 
 use function count;
 use function end;
+use function max;
 use function reset;
 
 final class BenchmarkTimeExecuteMemoryUsage
@@ -53,22 +54,22 @@ final class BenchmarkTimeExecuteMemoryUsage
         $this->iterations = $iterations;
         $this->numberOfTimes = $firstResult->numberOfTimes;
 
-        $peakMemoryInIterations = 0;
+        /** @var list<int> $memIteration */
+        $memIteration = [];
         $time = 0.0;
 
         foreach ($timeExecuteMemoryUsageInIterations as $timeExecuteMemoryUsageInIteration) {
             $time += ($timeExecuteMemoryUsageInIteration->endTimeInIteration - $timeExecuteMemoryUsageInIteration->startTimeInIteration) / $this->numberOfTimes;
-            if ($timeExecuteMemoryUsageInIteration->endBytesUsageInIteration > $peakMemoryInIterations) {
-                $peakMemoryInIterations = $timeExecuteMemoryUsageInIteration->endBytesUsageInIteration;
-            }
+            $memIteration[] = $timeExecuteMemoryUsageInIteration->endBytesUsageInIteration - $timeExecuteMemoryUsageInIteration->startBytesUsageInIteration;
         }
 
-        // average time
         $this->time = ($time / $this->iterations);
         // maximum peak memory usage
         $this->bytesPeakUsage = $lastResult->bytesPeakUsage;
-        $this->bytesUsage = $peakMemoryInIterations - $firstResult->startBytesUsageInIteration;
+        $this->bytesUsage = $lastResult->endBytesUsageInIteration - $firstResult->startBytesUsageInIteration;
         // memory leaking
-        $this->bytesLeaking = $lastResult->endBytesUsageInIteration - $firstResult->startBytesUsageInIteration;
+        $firstMemDiff = reset($memIteration);
+        $lastMemDiff = end($memIteration);
+        $this->bytesLeaking = max($lastMemDiff - $firstMemDiff, 0);
     }
 }

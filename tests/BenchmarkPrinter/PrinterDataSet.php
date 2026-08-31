@@ -17,7 +17,7 @@ final class PrinterDataSet
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus.',
             [
                 new TimeExecuteMemoryUsageInIteration(100, 200, 0, 10.11, 20.45, 2),
-                new TimeExecuteMemoryUsageInIteration(200, 270, 270, 20.99, 40.21, 2),
+                new TimeExecuteMemoryUsageInIteration(200, 370, 270, 20.99, 40.21, 2),
             ]
         );
 
