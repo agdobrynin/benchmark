@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Kaspi\Benchmark;
 
+use InvalidArgumentException;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
 
 use function array_key_last;
@@ -22,9 +23,13 @@ final class BenchmarkPrinter
      */
     private array $benchmarkResultsCollection;
 
-    public function attach(BenchmarkResults $benchmarkResults): self
+    public function attach(BenchmarkResults $benchmarkResults, BenchmarkResults ...$_): self
     {
         $this->benchmarkResultsCollection[] = $benchmarkResults;
+
+        foreach ($_ as $__) {
+            $this->benchmarkResultsCollection[] = $__;
+        }
 
         return $this;
     }
@@ -34,6 +39,9 @@ final class BenchmarkPrinter
         unset($this->benchmarkResultsCollection);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function printEachVersion(): void
     {
         $this->collectionIsEmpty();
@@ -45,9 +53,9 @@ final class BenchmarkPrinter
         $tableHead = <<< 'TABLEHEAD'
 
 +--------------------------------+-------+-------+-----------------------------------------+-------------+
-| Benchmark description          |       | Num.  | Memory                                  |    Time     |
-|                                | Iter. | of    +-------------+-------------+-------------+  execution  |
-|                                |       | times |     Usage   |    Peak     |    Leak     |   per iter. |
+| Benchmark description          |       | Num.  | Memory                                  | Time        |
+|                                | Iter. | of    +-------------+-------------+-------------+ execution   |
+|                                |       | times |  Usage      | Peak        | Leak        | per iterate |
 TABLEHEAD;
 
         foreach ($this->benchmarkResultsCollection as $benchmarkResult) {
@@ -89,6 +97,9 @@ TABLEHEAD;
         echo "\n";
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function printCompareVersions(): void
     {
         $this->collectionIsEmpty();
@@ -101,13 +112,14 @@ TABLEHEAD;
             }
         }
 
-        $formatGroup = "\n| %-98s |";
+        $formatGroup = "\n| %-112s |";
         $formatResult = "\n| %30s | %7s | %-5s | %-5s | %-11s | %-11s | %-11s | %-11s |";
         $formatDivResult = "\n| %30s +%'-9s+%'-7s+%'-7s+%'-13s+%'-13s+%'-13s+%'-13s+";
         $formatLineDescription = "\n| %30s |%-9s|%-7s|%-7s|%-13s|%-13s|%-13s|%-13s|";
         $formatLineBound = "\n+%'-32s+%'-9s+%'-7s+%'-7s+%'-13s+%'-13s+%'-13s+%'-13s+";
 
         echo <<< 'TABLEHEAD'
+
 +--------------------------------+---------+-------+-------+-----------------------------------------+-------------+
 | Benchmarks group               | Package | Iter. |  Num. | Memory                                  |    Time     |
 |  ↘️  Benchmark description     | version |       |   of  +-------------+-------------+-------------+  execution  |
@@ -166,12 +178,13 @@ TABLEHEAD;
         echo "\n";
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function collectionIsEmpty(): void
     {
         if (!isset($this->benchmarkResultsCollection)) {
-            echo "Benchmark results collection is empty.\n";
-
-            exit(1);
+            throw new InvalidArgumentException('Benchmark results collection is empty.');
         }
     }
 }
