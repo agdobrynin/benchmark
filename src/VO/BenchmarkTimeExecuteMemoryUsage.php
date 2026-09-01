@@ -13,25 +13,33 @@ use function reset;
 
 final class BenchmarkTimeExecuteMemoryUsage
 {
+    /**
+     * Maximum memory usage (in bytes) across all iterations.
+     */
     public readonly int $bytesUsage;
 
     public readonly int $bytesPeakUsage;
 
     /**
-     * @var float average time in nanoseconds per iteration
+     * Average time per iteration in nanoseconds.
      */
     public readonly float $time;
 
     /**
-     * @var int number of iterations for benchmarking
+     * Number of iterations for the benchmark.
      */
     public readonly int $iterations;
 
     /**
-     * @var int number of calls in a single benchmark iteration
+     * Number of calls in a single benchmark iteration.
      */
     public readonly int $numberOfTimes;
 
+    /**
+     * Memory usage increases with each step—this is a memory leak.
+     * Comparison of memory usage between the last and first iterations.
+     * Memory consumption on the last iteration should be lower than on the first.
+     */
     public readonly int $bytesLeaking;
 
     /**
