@@ -54,22 +54,25 @@ final class BenchmarkTimeExecuteMemoryUsage
         $this->iterations = $iterations;
         $this->numberOfTimes = $firstResult->numberOfTimes;
 
-        /** @var list<int> $memIteration */
-        $memIteration = [];
+        $memoryUsageInIterationMax = 0;
         $time = 0.0;
 
         foreach ($timeExecuteMemoryUsageInIterations as $timeExecuteMemoryUsageInIteration) {
             $time += ($timeExecuteMemoryUsageInIteration->endTimeInIteration - $timeExecuteMemoryUsageInIteration->startTimeInIteration) / $this->numberOfTimes;
-            $memIteration[] = $timeExecuteMemoryUsageInIteration->endBytesUsageInIteration - $timeExecuteMemoryUsageInIteration->startBytesUsageInIteration;
+            $diffMem = $timeExecuteMemoryUsageInIteration->endBytesUsageInIteration - $timeExecuteMemoryUsageInIteration->startBytesUsageInIteration;
+            $memoryUsageInIterationMax = max($diffMem, $memoryUsageInIterationMax);
         }
 
         $this->time = ($time / $this->iterations);
         // maximum peak memory usage
         $this->bytesPeakUsage = $lastResult->bytesPeakUsage;
-        $this->bytesUsage = $lastResult->endBytesUsageInIteration - $firstResult->startBytesUsageInIteration;
+        $this->bytesUsage = $memoryUsageInIterationMax;
         // memory leaking
-        $firstMemDiff = reset($memIteration);
-        $lastMemDiff = end($memIteration);
-        $this->bytesLeaking = max($lastMemDiff - $firstMemDiff, 0);
+        $firstIterationMemoryUsage = $firstResult->endBytesUsageInIteration - $firstResult->startBytesUsageInIteration;
+        $lastIterationMemoryUsage = $lastResult->endBytesUsageInIteration - $lastResult->startBytesUsageInIteration;
+
+        $this->bytesLeaking = $lastIterationMemoryUsage > $firstIterationMemoryUsage
+            ? $lastIterationMemoryUsage
+            : 0;
     }
 }

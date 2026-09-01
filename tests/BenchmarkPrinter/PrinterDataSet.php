@@ -24,7 +24,8 @@ final class PrinterDataSet
         $resOne->attachIterations(
             'Lorem ipsum dolor sit amet',
             [
-                new TimeExecuteMemoryUsageInIteration(270, 280, 0, 45.11, 49.45, 2),
+                new TimeExecuteMemoryUsageInIteration(270, 286, 0, 45.11, 49.45, 2),
+                new TimeExecuteMemoryUsageInIteration(280, 291, 0, 50.21, 55.45, 2),
             ]
         );
 
@@ -41,6 +42,7 @@ final class PrinterDataSet
             'Lorem ipsum dolor sit amet',
             [
                 new TimeExecuteMemoryUsageInIteration(200, 200, 0, 39.20, 43.11, 2),
+                new TimeExecuteMemoryUsageInIteration(200, 260, 0, 44.20, 47.11, 2),
             ]
         );
 
