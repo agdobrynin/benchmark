@@ -9,7 +9,6 @@ use JsonException;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use RuntimeException;
 
-use function array_map;
 use function count;
 use function file_exists;
 use function file_get_contents;
@@ -117,14 +116,23 @@ final class BenchmarkResultsFile
                 $benchmarkResults = new BenchmarkResults($packageVersion, $fileGroupName);
 
                 foreach ($fileBenchmarkResults as $fileBenchmarkDescription => $fileTimeExecuteMemoryUsageIterations) {
-                    $benchmarkResults->attachIterations(
-                        $fileBenchmarkDescription,
-                        array_map(static fn (array $args): TimeExecuteMemoryUsageInIteration => new TimeExecuteMemoryUsageInIteration(...$args), $fileTimeExecuteMemoryUsageIterations)
-                    );
+                    $benchmarkResults->attachIterations($fileBenchmarkDescription, $this->buildTimeExecuteMemoryUsageInIteration($fileTimeExecuteMemoryUsageIterations));
                 }
 
                 yield $benchmarkResults;
             }
+        }
+    }
+
+    /**
+     * @param iterable<TimeExecuteMemoryUsageInIterationType> $fileTimeExecuteMemoryUsageIterations
+     *
+     * @return Generator<TimeExecuteMemoryUsageInIteration>
+     */
+    private function buildTimeExecuteMemoryUsageInIteration(iterable $fileTimeExecuteMemoryUsageIterations): Generator
+    {
+        foreach ($fileTimeExecuteMemoryUsageIterations as $args) {
+            yield new TimeExecuteMemoryUsageInIteration(...$args);
         }
     }
 

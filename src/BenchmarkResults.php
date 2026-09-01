@@ -43,12 +43,16 @@ final class BenchmarkResults
     /**
      * Attaches the collection of results from all iterations for a single benchmark.
      *
-     * @param non-empty-string                        $benchmarkDescription
-     * @param list<TimeExecuteMemoryUsageInIteration> $iterations
+     * @param non-empty-string                            $benchmarkDescription
+     * @param iterable<TimeExecuteMemoryUsageInIteration> $iterations
      */
-    public function attachIterations(string $benchmarkDescription, array $iterations): void
+    public function attachIterations(string $benchmarkDescription, iterable $iterations): void
     {
-        $this->results[$benchmarkDescription] = $iterations;
+        foreach ($iterations as $iteration) {
+            if ($iteration instanceof TimeExecuteMemoryUsageInIteration) {
+                $this->results[$benchmarkDescription][] = $iteration;
+            }
+        }
         unset($this->benchmarkTimeExecuteMemoryUsageItems);
     }
 
