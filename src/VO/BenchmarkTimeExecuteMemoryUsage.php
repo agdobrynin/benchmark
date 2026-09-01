@@ -18,6 +18,9 @@ final class BenchmarkTimeExecuteMemoryUsage
      */
     public readonly int $bytesUsage;
 
+    /**
+     * Peak memory consumption (in bytes) during benchmark execution.
+     */
     public readonly int $bytesPeakUsage;
 
     /**
