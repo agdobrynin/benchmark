@@ -91,8 +91,6 @@ final class Formatter
         if ($sizeBarProgress < $sizeBar) {
             $barProgressStr .= '>';
             $barProgressStr .= str_repeat(' ', $sizeBar - $sizeBarProgress - 1);
-        } else {
-            $barProgressStr .= '=';
         }
 
         $currentPercent = number_format($percentage * 100);

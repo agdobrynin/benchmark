@@ -59,7 +59,7 @@ class FormatterTest extends TestCase
         'title' => 'Long description', 'step' => 10, 'total' => 50, 'sizeTitle' => 10, 'sizeBar' => 10, 'expectedStr' => "\rLong desc… [==>       ] 20%",
     ])]
     #[TestWith([
-        'title' => 'Foo', 'step' => 50, 'total' => 50, 'sizeTitle' => 10, 'sizeBar' => 10, 'expectedStr' => "\rFoo....... [===========] 100%",
+        'title' => 'Foo', 'step' => 50, 'total' => 50, 'sizeTitle' => 10, 'sizeBar' => 10, 'expectedStr' => "\rFoo....... [==========] 100%",
     ])]
     public function testProgressBar(string $title, int $step, int $total, int $sizeTitle, int $sizeBar, string $expectedStr): void
     {
