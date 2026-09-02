@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Kaspi\Benchmark;
 
-use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageTotal;
+use InvalidArgumentException;
+use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
 
 use function array_key_last;
 use function array_shift;
@@ -22,9 +23,13 @@ final class BenchmarkPrinter
      */
     private array $benchmarkResultsCollection;
 
-    public function attach(BenchmarkResults $benchmarkResults): self
+    public function attach(BenchmarkResults $benchmarkResults, BenchmarkResults ...$_): self
     {
         $this->benchmarkResultsCollection[] = $benchmarkResults;
+
+        foreach ($_ as $__) {
+            $this->benchmarkResultsCollection[] = $__;
+        }
 
         return $this;
     }
@@ -34,6 +39,9 @@ final class BenchmarkPrinter
         unset($this->benchmarkResultsCollection);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function printEachVersion(): void
     {
         $this->collectionIsEmpty();
@@ -45,9 +53,9 @@ final class BenchmarkPrinter
         $tableHead = <<< 'TABLEHEAD'
 
 +----------------------------------------+-------+-------+---------------------------+-------------+
-| Benchmark description                  |       | Num.  |         Memory            |    Time     |
-|                                        | Iter. | of    +-------------+-------------+  execution  |
-|                                        |       | times |  Allocated  |    Peak     |             |
+| Benchmark description                  | Iter. | Num.  | Memory                    | Time        |
+|                                        |       | of    +-------------+-------------+ execution   |
+|                                        |       | times | Usage       | Peak usage  | per iterate |
 TABLEHEAD;
 
         foreach ($this->benchmarkResultsCollection as $benchmarkResult) {
@@ -62,19 +70,19 @@ TABLEHEAD;
             printf("\n| %-96s |", $benchmarkResult->groupName);
             printf($formatTableLineSeparator, '', '', '', '', '', '');
 
-            $timeExecuteMemoryUsingTotalItems = $benchmarkResult->getTimeExecuteMemoryUsingTotalItems();
+            $timeExecuteMemoryUsingTotalItems = $benchmarkResult->getBenchmarkTimeExecuteMemoryUsageItems();
 
-            foreach ($timeExecuteMemoryUsingTotalItems as $benchmarkDescription => $timeExecuteMemoryUsingTotal) {
+            foreach ($timeExecuteMemoryUsingTotalItems as $benchmarkDescription => $benchmarkTimeExecuteMemoryUsage) {
                 $description = explode("\n", wordwrap($benchmarkDescription, 38, cut_long_words: true));
 
                 printf(
                     $formatResult,
                     $description[0],
-                    $timeExecuteMemoryUsingTotal->iterations,
-                    $timeExecuteMemoryUsingTotal->numberOfTimes,
-                    Formatter::formatBytes($timeExecuteMemoryUsingTotal->memoryUsage, 4),
-                    Formatter::formatBytes($timeExecuteMemoryUsingTotal->memoryPeakUsage, 4),
-                    Formatter::formatTimeExecute($timeExecuteMemoryUsingTotal->hrTime, 4),
+                    $benchmarkTimeExecuteMemoryUsage->iterations,
+                    $benchmarkTimeExecuteMemoryUsage->numberOfTimes,
+                    Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesUsage, 4),
+                    Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesPeakUsage, 4),
+                    Formatter::formatTimeExecute($benchmarkTimeExecuteMemoryUsage->time, 4),
                 );
 
                 for ($i = 1, $c = count($description); $i < $c; ++$i) {
@@ -88,6 +96,9 @@ TABLEHEAD;
         echo "\n";
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function printCompareVersions(): void
     {
         $this->collectionIsEmpty();
@@ -95,8 +106,8 @@ TABLEHEAD;
 
         // collect results group by "benchmark group name", "benchmark description", "package version".
         foreach ($this->benchmarkResultsCollection as $benchmarkResult) {
-            foreach ($benchmarkResult->getTimeExecuteMemoryUsingTotalItems() as $benchmarkDescription => $timeExecuteMemoryUsingTotal) {
-                $tableResults[$benchmarkResult->groupName][$benchmarkDescription][$benchmarkResult->packageVersion] = $timeExecuteMemoryUsingTotal;
+            foreach ($benchmarkResult->getBenchmarkTimeExecuteMemoryUsageItems() as $benchmarkDescription => $benchmarkTimeExecuteMemoryUsing) {
+                $tableResults[$benchmarkResult->groupName][$benchmarkDescription][$benchmarkResult->packageVersion] = $benchmarkTimeExecuteMemoryUsing;
             }
         }
 
@@ -107,10 +118,11 @@ TABLEHEAD;
         $formatLineBound = "\n+%'-32s+%'-9s+%'-7s+%'-7s+%'-13s+%'-13s+%'-13s+";
 
         echo <<< 'TABLEHEAD'
+
 +--------------------------------+---------+-------+-------+---------------------------+-------------+
-| Benchmarks group               | Package | Iter. |  Num. |         Memory            |    Time     |
-|  ↘️  Benchmark description     | version |       |   of  +-------------+-------------+  execution  |
-|                                |         |       | times |  Allocated  |    Peak     |             |
+| Benchmarks group               | Package | Iter. | Num.  | Memory                    | Time        |
+|  ↘️  Benchmark description     | version |       | of    +-------------+-------------+ execution   |
+|                                |         |       | times | Usage       | Peak usage  | per iterate |
 TABLEHEAD;
 
         printf($formatLineBound, '', '', '', '', '', '', '');
@@ -124,10 +136,10 @@ TABLEHEAD;
                 $lastPackageVersion = array_key_last($packageVersions);
 
                 /**
-                 * @var non-empty-string            $packageVersion
-                 * @var TimeExecuteMemoryUsageTotal $timeExecMemTotal
+                 * @var non-empty-string                $packageVersion
+                 * @var BenchmarkTimeExecuteMemoryUsage $benchmarkTimeExecuteMemoryUsage
                  */
-                foreach ($packageVersions as $packageVersion => $timeExecMemTotal) {
+                foreach ($packageVersions as $packageVersion => $benchmarkTimeExecuteMemoryUsage) {
                     $packageVersionPrint = strlen($packageVersion) > 7
                         ? substr($packageVersion, 0, 6).'…'
                         : $packageVersion;
@@ -137,11 +149,11 @@ TABLEHEAD;
                         $formatResult,
                         $descriptionWrapLine,
                         $packageVersionPrint,
-                        $timeExecMemTotal->iterations,
-                        $timeExecMemTotal->numberOfTimes,
-                        Formatter::formatBytes($timeExecMemTotal->memoryUsage, 4),
-                        Formatter::formatBytes($timeExecMemTotal->memoryPeakUsage, 4),
-                        Formatter::formatTimeExecute($timeExecMemTotal->hrTime, 4),
+                        $benchmarkTimeExecuteMemoryUsage->iterations,
+                        $benchmarkTimeExecuteMemoryUsage->numberOfTimes,
+                        Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesUsage, 4),
+                        Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesPeakUsage, 4),
+                        Formatter::formatTimeExecute($benchmarkTimeExecuteMemoryUsage->time, 4),
                     );
 
                     if ($lastPackageVersion !== $packageVersion) {
@@ -164,12 +176,13 @@ TABLEHEAD;
         echo "\n";
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function collectionIsEmpty(): void
     {
         if (!isset($this->benchmarkResultsCollection)) {
-            echo "Benchmark results collection is empty.\n";
-
-            exit(1);
+            throw new InvalidArgumentException('Benchmark results collection is empty.');
         }
     }
 }

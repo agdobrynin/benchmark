@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Kaspi\Benchmark\Tests;
 
 use Kaspi\Benchmark\BenchmarkResults;
-use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageTotal;
-use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
+use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
+use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -17,8 +17,8 @@ use function round;
  * @internal
  */
 #[CoversClass(BenchmarkResults::class)]
-#[UsesClass(TimeExecuteMemoryUsageIteration::class)]
-#[UsesClass(TimeExecuteMemoryUsageTotal::class)]
+#[CoversClass(BenchmarkTimeExecuteMemoryUsage::class)]
+#[UsesClass(TimeExecuteMemoryUsageInIteration::class)]
 class BenchmarkResultsTest extends TestCase
 {
     protected BenchmarkResults $results;
@@ -39,16 +39,16 @@ class BenchmarkResultsTest extends TestCase
     {
         $this->results->attachIteration(
             'Bar',
-            new TimeExecuteMemoryUsageIteration(1, 2, 2, 2, 10.22, 10.99, 2)
+            new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2)
         );
 
         self::assertTrue($this->results->getResults()->valid());
-        self::assertTrue($this->results->getTimeExecuteMemoryUsingTotalItems()->valid());
+        self::assertTrue($this->results->getBenchmarkTimeExecuteMemoryUsageItems()->valid());
 
         $this->results->reset();
 
         self::assertFalse($this->results->getResults()->valid());
-        self::assertFalse($this->results->getTimeExecuteMemoryUsingTotalItems()->valid());
+        self::assertFalse($this->results->getBenchmarkTimeExecuteMemoryUsageItems()->valid());
     }
 
     public function testAttachOneIteration(): void
@@ -58,11 +58,11 @@ class BenchmarkResultsTest extends TestCase
         // do attach item
         $this->results->attachIteration(
             'Bar',
-            new TimeExecuteMemoryUsageIteration(1, 2, 2, 2, 10.22, 10.99, 2)
+            new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2)
         );
         $this->results->attachIteration(
             'Bar',
-            new TimeExecuteMemoryUsageIteration(1, 2, 2, 2, 10.22, 10.99, 2)
+            new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2)
         );
 
         $iterations = $this->results->getResults();
@@ -71,10 +71,26 @@ class BenchmarkResultsTest extends TestCase
         self::assertEquals('Bar', $iterations->key());
 
         $items = $iterations->current();
-        self::assertCount(2, $items);
 
-        self::assertInstanceOf(TimeExecuteMemoryUsageIteration::class, $items[0]);
-        self::assertInstanceOf(TimeExecuteMemoryUsageIteration::class, $items[1]);
+        self::assertTrue($items->valid());
+
+        $item = $items->current();
+        $key = $items->key();
+
+        self::assertInstanceOf(TimeExecuteMemoryUsageInIteration::class, $item);
+        self::assertEquals(0, $key);
+
+        $items->next();
+
+        $item = $items->current();
+        $key = $items->key();
+
+        self::assertInstanceOf(TimeExecuteMemoryUsageInIteration::class, $item);
+        self::assertEquals(1, $key);
+
+        $items->next();
+
+        self::assertFalse($items->valid());
     }
 
     public function testAttachAllIterations(): void
@@ -85,8 +101,8 @@ class BenchmarkResultsTest extends TestCase
         $this->results->attachIterations(
             'Bar',
             [
-                new TimeExecuteMemoryUsageIteration(1, 2, 2, 2, 10.22, 10.99, 2),
-                new TimeExecuteMemoryUsageIteration(1, 2, 2, 2, 10.22, 10.99, 2),
+                new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2),
+                new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2),
             ]
         );
 
@@ -98,10 +114,15 @@ class BenchmarkResultsTest extends TestCase
 
         $items = $iterations->current();
 
-        self::assertCount(2, $items);
+        self::assertTrue($items->valid());
 
-        self::assertInstanceOf(TimeExecuteMemoryUsageIteration::class, $items[0]);
-        self::assertInstanceOf(TimeExecuteMemoryUsageIteration::class, $items[1]);
+        self::assertInstanceOf(TimeExecuteMemoryUsageInIteration::class, $items->current());
+        self::assertEquals(0, $items->key());
+        $items->next();
+        self::assertInstanceOf(TimeExecuteMemoryUsageInIteration::class, $items->current());
+        self::assertEquals(1, $items->key());
+        $items->next();
+        self::assertFalse($items->valid());
     }
 
     public function testCalculateTotalFromEmptyIterations(): void
@@ -109,7 +130,7 @@ class BenchmarkResultsTest extends TestCase
         // do attach items
         $this->results->attachIterations('Bar', []);
 
-        $totals = $this->results->getTimeExecuteMemoryUsingTotalItems();
+        $totals = $this->results->getBenchmarkTimeExecuteMemoryUsageItems();
 
         self::assertFalse($totals->valid());
     }
@@ -120,27 +141,29 @@ class BenchmarkResultsTest extends TestCase
         $this->results->attachIterations(
             'Bar',
             [
-                new TimeExecuteMemoryUsageIteration(1, 2, 2, 2, 10.22, 10.99, 2),
-                new TimeExecuteMemoryUsageIteration(2, 3, 2, 3, 11.99, 12.05, 2),
+                new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2),
+                new TimeExecuteMemoryUsageInIteration(2, 3, 3, 11.99, 12.05, 2),
             ]
         );
 
-        $totalItems = $this->results->getTimeExecuteMemoryUsingTotalItems();
+        $totalItems = $this->results->getBenchmarkTimeExecuteMemoryUsageItems();
 
         self::assertTrue($totalItems->valid());
         self::assertEquals('Bar', $totalItems->key());
+
+        /** @var BenchmarkTimeExecuteMemoryUsage $total */
         $total = $totalItems->current();
 
         self::assertEquals(2, $total->iterations);
         self::assertEquals(2, $total->numberOfTimes);
-        self::assertEquals(2, $total->memoryUsage);
-        self::assertEquals(1, $total->memoryPeakUsage);
-        self::assertEquals(0.4150, round($total->hrTime, 4));
+        self::assertEquals(1, $total->bytesUsage);
+        self::assertEquals(3, $total->bytesPeakUsage);
+        self::assertEquals(0.2075, round($total->time, 4));
 
         // test cached data
         self::assertSame(
             $totalItems->current(),
-            $this->results->getTimeExecuteMemoryUsingTotalItems()->current()
+            $this->results->getBenchmarkTimeExecuteMemoryUsageItems()->current()
         );
     }
 }

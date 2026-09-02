@@ -15,7 +15,7 @@ use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
-use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
+use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
@@ -129,7 +129,6 @@ final class BenchmarkRunner
                         gc_collect_cycles();
 
                         $startMemoryUsage = memory_get_usage();
-                        $startPeakUsage = memory_get_peak_usage();
                         $startHrTime = hrtime(true);
 
                         // Execute the target method
@@ -137,10 +136,11 @@ final class BenchmarkRunner
                             $benchmarkMethod->targetReflectionMethod->invokeArgs($benchmarkGroup->benchmarkObject, $benchmarkArgs);
                         }
 
-                        $timeMemory = new TimeExecuteMemoryUsageIteration(
+                        gc_collect_cycles();
+
+                        $timeMemory = new TimeExecuteMemoryUsageInIteration(
                             $startMemoryUsage,
                             memory_get_usage(),
-                            $startPeakUsage,
                             memory_get_peak_usage(),
                             $startHrTime,
                             hrtime(true),

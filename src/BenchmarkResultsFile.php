@@ -6,10 +6,9 @@ namespace Kaspi\Benchmark;
 
 use Generator;
 use JsonException;
-use Kaspi\Benchmark\VO\TimeExecuteMemoryUsageIteration;
+use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use RuntimeException;
 
-use function array_map;
 use function count;
 use function file_exists;
 use function file_get_contents;
@@ -29,13 +28,12 @@ use const JSON_THROW_ON_ERROR;
  * @phpstan-type PackageVersionType non-empty-string
  * @phpstan-type BenchmarkGroupNameType non-empty-string
  * @phpstan-type BenchmarkDescriptionType non-empty-string
- * @phpstan-type TimeExecuteMemoryUsageIterationType array{
- *     startMemoryUsage: int,
- *     endMemoryUsage: int,
- *     startMemoryPeakUsage: int,
- *     endMemoryPeakUsage: int,
- *     startHrTime: float,
- *     endHrTime: float,
+ * @phpstan-type TimeExecuteMemoryUsageInIterationType array{
+ *     startBytesUsageInIteration: int,
+ *     endBytesUsageInIteration: int,
+ *     bytesPeakUsage: int,
+ *     startTimeInIteration: float,
+ *     endTimeInIteration: float,
  *     numberOfTimes: int,
  * }
  */
@@ -83,13 +81,17 @@ final class BenchmarkResultsFile
 
         foreach ($this->attachedBenchmarkResults as $benchmarkResults) {
             /**
-             * @var list<TimeExecuteMemoryUsageIteration> $timeExecuteMemoryUseIterationItems
+             * @var Generator<TimeExecuteMemoryUsageInIteration> $timeExecuteMemoryUsageInIterationItems
              */
-            foreach ($benchmarkResults->getResults() as $benchmarkDescription => $timeExecuteMemoryUseIterationItems) {
-                $fileResults[$benchmarkResults->packageVersion][$benchmarkResults->groupName][$benchmarkDescription] = array_map(
-                    static fn (TimeExecuteMemoryUsageIteration $i): array => (array) $i,
-                    $timeExecuteMemoryUseIterationItems
-                );
+            foreach ($benchmarkResults->getResults() as $benchmarkDescription => $timeExecuteMemoryUsageInIterationItems) {
+                $items = [];
+
+                foreach ($timeExecuteMemoryUsageInIterationItems as $timeExecuteMemoryUsageInIteration) {
+                    $items[] = (array) $timeExecuteMemoryUsageInIteration;
+                }
+
+                $fileResults[$benchmarkResults->packageVersion][$benchmarkResults->groupName][$benchmarkDescription] = $items;
+                unset($items);
             }
         }
 
@@ -114,10 +116,7 @@ final class BenchmarkResultsFile
                 $benchmarkResults = new BenchmarkResults($packageVersion, $fileGroupName);
 
                 foreach ($fileBenchmarkResults as $fileBenchmarkDescription => $fileTimeExecuteMemoryUsageIterations) {
-                    $benchmarkResults->attachIterations(
-                        $fileBenchmarkDescription,
-                        array_map(static fn (array $i): TimeExecuteMemoryUsageIteration => new TimeExecuteMemoryUsageIteration(...$i), $fileTimeExecuteMemoryUsageIterations)
-                    );
+                    $benchmarkResults->attachIterations($fileBenchmarkDescription, $this->buildTimeExecuteMemoryUsageInIteration($fileTimeExecuteMemoryUsageIterations));
                 }
 
                 yield $benchmarkResults;
@@ -126,7 +125,19 @@ final class BenchmarkResultsFile
     }
 
     /**
-     * @return array<PackageVersionType, array<BenchmarkGroupNameType, array<BenchmarkDescriptionType, non-empty-list<TimeExecuteMemoryUsageIterationType>>>>
+     * @param iterable<TimeExecuteMemoryUsageInIterationType> $fileTimeExecuteMemoryUsageIterations
+     *
+     * @return Generator<TimeExecuteMemoryUsageInIteration>
+     */
+    private function buildTimeExecuteMemoryUsageInIteration(iterable $fileTimeExecuteMemoryUsageIterations): Generator
+    {
+        foreach ($fileTimeExecuteMemoryUsageIterations as $args) {
+            yield new TimeExecuteMemoryUsageInIteration(...$args);
+        }
+    }
+
+    /**
+     * @return array<PackageVersionType, array<BenchmarkGroupNameType, array<BenchmarkDescriptionType, non-empty-list<TimeExecuteMemoryUsageInIterationType>>>>
      *
      * @throws RuntimeException
      */
@@ -192,12 +203,12 @@ final class BenchmarkResultsFile
                     }
 
                     /**
-                     * @var TimeExecuteMemoryUsageIterationType $timeExecuteMemoryUsageIteration
+                     * @var TimeExecuteMemoryUsageInIterationType $timeExecuteMemoryUsageIteration
                      */
                     foreach ($timeExecuteMemoryUsageIterationsItems as $timeExecuteMemoryUsageIteration) {
                         if (!is_array($timeExecuteMemoryUsageIteration)) {
                             throw new RuntimeException(
-                                sprintf('The benchmark %s in package version %s and group named %s must contain an array of iterations, where each element must be represented as a non-empty array with keys matching the public properties of class %s.', var_export($benchmarkDescription, true), var_export($version, true), var_export($groupName, true), TimeExecuteMemoryUsageIteration::class)
+                                sprintf('The benchmark %s in package version %s and group named %s must contain an array of iterations, where each element must be represented as a non-empty array with keys matching the public properties of class %s.', var_export($benchmarkDescription, true), var_export($version, true), var_export($groupName, true), TimeExecuteMemoryUsageInIteration::class)
                             );
                         }
 
