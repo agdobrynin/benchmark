@@ -41,8 +41,8 @@ final class PrinterDataSet
         $resTwo->attachIterations(
             'Lorem ipsum dolor sit amet',
             [
-                new TimeExecuteMemoryUsageInIteration(200, 200, 0, 39.20, 43.11, 2),
-                new TimeExecuteMemoryUsageInIteration(200, 260, 0, 44.20, 47.11, 2),
+                new TimeExecuteMemoryUsageInIteration(200, 220, 0, 39.20, 43.11, 2),
+                new TimeExecuteMemoryUsageInIteration(220, 260, 0, 44.20, 47.11, 2),
             ]
         );
 

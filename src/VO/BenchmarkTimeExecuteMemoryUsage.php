@@ -8,7 +8,6 @@ use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 
 use function count;
 use function end;
-use function max;
 use function reset;
 
 final class BenchmarkTimeExecuteMemoryUsage
@@ -39,9 +38,7 @@ final class BenchmarkTimeExecuteMemoryUsage
     public readonly int $numberOfTimes;
 
     /**
-     * Memory usage increases with each step—this is a memory leak.
-     * Comparison of memory usage between the last and first iterations.
-     * Memory consumption on the last iteration should be lower than on the first.
+     * Memory usage increases with each step — this is a memory leak.
      */
     public readonly int $bytesLeaking;
 
@@ -64,26 +61,39 @@ final class BenchmarkTimeExecuteMemoryUsage
 
         $this->iterations = $iterations;
         $this->numberOfTimes = $firstResult->numberOfTimes;
+        // maximum peak memory usage
+        $this->bytesPeakUsage = $lastResult->bytesPeakUsage;
 
-        $memoryUsageInIterationMax = 0;
         $time = 0.0;
+        // Total memory usage for iterations excluding the first iteration.
+        $memoryUsageSum = 0;
+        $maxMemoryUsageInIterations = 0;
 
-        foreach ($timeExecuteMemoryUsageInIterations as $timeExecuteMemoryUsageInIteration) {
-            $time += ($timeExecuteMemoryUsageInIteration->endTimeInIteration - $timeExecuteMemoryUsageInIteration->startTimeInIteration) / $this->numberOfTimes;
-            $diffMem = $timeExecuteMemoryUsageInIteration->endBytesUsageInIteration - $timeExecuteMemoryUsageInIteration->startBytesUsageInIteration;
-            $memoryUsageInIterationMax = max($diffMem, $memoryUsageInIterationMax);
+        foreach ($timeExecuteMemoryUsageInIterations as $i => $iValue) {
+            $time += ($iValue->endTimeInIteration - $iValue->startTimeInIteration) / $this->numberOfTimes;
+            $diffMemIteration = $iValue->endBytesUsageInIteration - $iValue->startBytesUsageInIteration;
+
+            if ($i > 0) {
+                $memoryUsageSum += $diffMemIteration;
+            }
+
+            if ($maxMemoryUsageInIterations < $diffMemIteration) {
+                $maxMemoryUsageInIterations = $diffMemIteration;
+            }
         }
 
         $this->time = ($time / $this->iterations);
-        // maximum peak memory usage
-        $this->bytesPeakUsage = $lastResult->bytesPeakUsage;
-        $this->bytesUsage = $memoryUsageInIterationMax;
-        // memory leaking
-        $firstIterationMemoryUsage = $firstResult->endBytesUsageInIteration - $firstResult->startBytesUsageInIteration;
-        $lastIterationMemoryUsage = $lastResult->endBytesUsageInIteration - $lastResult->startBytesUsageInIteration;
+        $this->bytesUsage = $maxMemoryUsageInIterations;
 
-        $this->bytesLeaking = $lastIterationMemoryUsage > $firstIterationMemoryUsage
-            ? $lastIterationMemoryUsage
+        /*
+         * Memory leaking.
+         *
+         * If the maximum amount of memory is allocated during the first iteration,
+         * and more memory is allocated during subsequent iterations than was initially allocated,
+         * then this is a memory leak.
+         */
+        $this->bytesLeaking = ($firstResult->endBytesUsageInIteration - $firstResult->startBytesUsageInIteration) < $memoryUsageSum
+            ? $memoryUsageSum
             : 0;
     }
 }

@@ -64,7 +64,7 @@ class PrintEachVersionTest extends TestCase
 | Cras porta eleifend ante ut    |       |       |             |             |             |             |
 | maximus.                       |       |       |             |             |             |             |
 +--------------------------------+-------+-------+-------------+-------------+-------------+-------------+
-| Lorem ipsum dolor sit amet     | 2     | 2     | 60 B        | 0 B         | 60 B        | 1.705 ns    |
+| Lorem ipsum dolor sit amet     | 2     | 2     | 40 B        | 0 B         | 40 B        | 1.705 ns    |
 +--------------------------------+-------+-------+-------------+-------------+-------------+-------------+
 ');
         $printer->printEachVersion();
