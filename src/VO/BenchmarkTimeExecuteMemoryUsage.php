@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Kaspi\Benchmark\VO;
 
+use InvalidArgumentException;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 
 use function count;
-use function end;
+use function get_debug_type;
+use function max;
 use function reset;
+use function sprintf;
 
 final class BenchmarkTimeExecuteMemoryUsage
 {
@@ -38,62 +41,42 @@ final class BenchmarkTimeExecuteMemoryUsage
     public readonly int $numberOfTimes;
 
     /**
-     * Memory usage increases with each step — this is a memory leak.
-     */
-    public readonly int $bytesLeaking;
-
-    /**
      * @param list<TimeExecuteMemoryUsageInIteration> $timeExecuteMemoryUsageInIterations
+     *
+     * @throws InvalidArgumentException
      */
     public function __construct(array $timeExecuteMemoryUsageInIterations)
     {
         $iterations = count($timeExecuteMemoryUsageInIterations);
 
         if (0 === $iterations) {
-            $this->iterations = $this->numberOfTimes = $this->bytesUsage = $this->bytesPeakUsage = $this->bytesLeaking = 0;
+            $this->iterations = $this->numberOfTimes = $this->bytesUsage = $this->bytesPeakUsage = 0;
             $this->time = 0.0;
 
             return;
         }
 
         $firstResult = reset($timeExecuteMemoryUsageInIterations);
-        $lastResult = end($timeExecuteMemoryUsageInIterations);
-
         $this->iterations = $iterations;
         $this->numberOfTimes = $firstResult->numberOfTimes;
-        // maximum peak memory usage
-        $this->bytesPeakUsage = $lastResult->bytesPeakUsage;
 
+        $maxMemoryUsageInIterations = $maxMemoryPeakUsageInIterations = 0;
         $time = 0.0;
-        // Total memory usage for iterations excluding the first iteration.
-        $memoryUsageSum = 0;
-        $maxMemoryUsageInIterations = 0;
 
-        foreach ($timeExecuteMemoryUsageInIterations as $i => $iValue) {
-            $time += ($iValue->endTimeInIteration - $iValue->startTimeInIteration) / $this->numberOfTimes;
-            $diffMemIteration = $iValue->endBytesUsageInIteration - $iValue->startBytesUsageInIteration;
-
-            if ($i > 0) {
-                $memoryUsageSum += $diffMemIteration;
+        foreach ($timeExecuteMemoryUsageInIterations as $timeExecuteMemoryUsageInIteration) {
+            if (!$timeExecuteMemoryUsageInIteration instanceof TimeExecuteMemoryUsageInIteration) {
+                throw new InvalidArgumentException(
+                    sprintf('The list must consist only of elements of type %s, given type "%s".', TimeExecuteMemoryUsageInIteration::class, get_debug_type($timeExecuteMemoryUsageInIteration))
+                );
             }
 
-            if ($maxMemoryUsageInIterations < $diffMemIteration) {
-                $maxMemoryUsageInIterations = $diffMemIteration;
-            }
+            $time += ($timeExecuteMemoryUsageInIteration->endTimeInIteration - $timeExecuteMemoryUsageInIteration->startTimeInIteration) / $this->numberOfTimes;
+            $maxMemoryUsageInIterations = max($maxMemoryUsageInIterations, $timeExecuteMemoryUsageInIteration->endBytesUsageInIteration - $timeExecuteMemoryUsageInIteration->startBytesUsageInIteration);
+            $maxMemoryPeakUsageInIterations = max($maxMemoryPeakUsageInIterations, $timeExecuteMemoryUsageInIteration->bytesPeakUsage);
         }
 
         $this->time = ($time / $this->iterations);
         $this->bytesUsage = $maxMemoryUsageInIterations;
-
-        /*
-         * Memory leaking.
-         *
-         * If the maximum amount of memory is allocated during the first iteration,
-         * and more memory is allocated during subsequent iterations than was initially allocated,
-         * then this is a memory leak.
-         */
-        $this->bytesLeaking = ($firstResult->endBytesUsageInIteration - $firstResult->startBytesUsageInIteration) < $memoryUsageSum
-            ? $memoryUsageSum
-            : 0;
+        $this->bytesPeakUsage = $maxMemoryPeakUsageInIterations;
     }
 }
