@@ -33,6 +33,7 @@ use function is_int;
 use function is_string;
 use function memory_get_peak_usage;
 use function memory_get_usage;
+use function printf;
 use function sprintf;
 use function str_replace;
 use function usort;
@@ -96,9 +97,11 @@ final class BenchmarkRunner
                 );
             }
 
-            /** @var null|string $benchmarkTitle */
-            $benchmarkTitle = null;
             $benchmarkResults = new BenchmarkResults($this->packageVersion, $benchmarkGroup->name);
+
+            if ($this->showProgressBar) {
+                printf("\n\r%s [%s]\n\n", $this->packageVersion, $benchmarkGroup->name);
+            }
 
             foreach ($benchmarkGroup->benchmarkMethods as $benchmarkMethod) {
                 $args = $this->benchmarkParameters($benchmarkMethod);
@@ -116,14 +119,9 @@ final class BenchmarkRunner
                         $benchmarkDescription = $benchmarkMethod->description;
                     }
 
-                    if ($this->showProgressBar) {
-                        echo "\n";
-                        $benchmarkTitle = sprintf('%s [%s] %s', $this->packageVersion, $benchmarkGroup->name, $benchmarkDescription);
-                    }
-
                     for ($i = 1; $i <= $benchmarkMethod->iterations; ++$i) {
-                        if (null !== $benchmarkTitle) {
-                            Formatter::progressBar($benchmarkTitle, $i, $benchmarkMethod->iterations, sizeBar: 33);
+                        if ($this->showProgressBar) {
+                            Formatter::progressBar($benchmarkDescription, $i, $benchmarkMethod->iterations, sizeBar: 33);
                         }
 
                         gc_collect_cycles();
