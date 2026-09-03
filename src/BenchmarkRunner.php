@@ -134,14 +134,19 @@ final class BenchmarkRunner
                             $benchmarkMethod->targetReflectionMethod->invokeArgs($benchmarkGroup->benchmarkObject, $benchmarkArgs);
                         }
 
+                        $endHrTime = hrtime(true);
+
                         gc_collect_cycles();
+
+                        $endMemoryUsage = memory_get_usage();
+                        $memoryPeakUsage = memory_get_peak_usage();
 
                         $timeMemory = new TimeExecuteMemoryUsageInIteration(
                             $startMemoryUsage,
-                            memory_get_usage(),
-                            memory_get_peak_usage(),
+                            $endMemoryUsage,
+                            $memoryPeakUsage,
                             $startHrTime,
-                            hrtime(true),
+                            $endHrTime,
                             $benchmarkMethod->numberOfTimes,
                         );
 
