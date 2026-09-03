@@ -12,9 +12,12 @@ final class PrinterDataSet
 {
     public static function benchmarkResults(): Generator
     {
+        $benchDescriptionOne = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus. Sed eget mi convallis, ultrices orci quis, aliquet dolor. Donec eget tellus eu mauris lacinia finibus.';
+        $benchDescriptionTwo = 'Lorem ipsum dolor sit amet';
+
         $resOne = new BenchmarkResults('v1.0.0', 'Foo group');
         $resOne->attachIterations(
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus.',
+            $benchDescriptionOne,
             [
                 new TimeExecuteMemoryUsageInIteration(100, 1000, 200, 2000, 0, 2000, 10.11, 20.45, 2),
                 new TimeExecuteMemoryUsageInIteration(200, 2000, 370, 3700, 270, 2700, 20.99, 40.21, 2),
@@ -22,7 +25,7 @@ final class PrinterDataSet
         );
 
         $resOne->attachIterations(
-            'Lorem ipsum dolor sit amet',
+            $benchDescriptionTwo,
             [
                 new TimeExecuteMemoryUsageInIteration(270, 2700, 286, 2860, 0, 0, 45.11, 49.45, 2),
                 new TimeExecuteMemoryUsageInIteration(280, 2800, 291, 2910, 0, 0, 50.21, 55.45, 2),
@@ -31,7 +34,7 @@ final class PrinterDataSet
 
         $resTwo = new BenchmarkResults('v2.0.x-dev', 'Foo group');
         $resTwo->attachIterations(
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus.',
+            $benchDescriptionOne,
             [
                 new TimeExecuteMemoryUsageInIteration(100, 1000, 200, 2000, 0, 0, 10.11, 19.01, 2),
                 new TimeExecuteMemoryUsageInIteration(200, 2000, 200, 2000, 0, 0, 20.99, 36.81, 2),
@@ -39,7 +42,7 @@ final class PrinterDataSet
         );
 
         $resTwo->attachIterations(
-            'Lorem ipsum dolor sit amet',
+            $benchDescriptionTwo,
             [
                 new TimeExecuteMemoryUsageInIteration(200, 2000, 220, 2200, 0, 0, 39.20, 43.11, 2),
                 new TimeExecuteMemoryUsageInIteration(220, 2200, 260, 2600, 0, 0, 44.20, 47.11, 2),
