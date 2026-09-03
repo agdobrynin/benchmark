@@ -27,7 +27,9 @@ class BenchmarkTimeExecuteMemoryUsageTest extends TestCase
         $b = new BenchmarkTimeExecuteMemoryUsage([]);
 
         self::assertEquals(0, $b->bytesPeakUsage);
+        self::assertEquals(0, $b->bytesPeakUsageReal);
         self::assertEquals(0, $b->bytesUsage);
+        self::assertEquals(0, $b->bytesUsageReal);
         self::assertEquals(0.0, $b->time);
         self::assertEquals(0, $b->numberOfTimes);
         self::assertEquals(0, $b->iterations);
@@ -35,22 +37,26 @@ class BenchmarkTimeExecuteMemoryUsageTest extends TestCase
 
     #[TestWith([
         [
-            new TimeExecuteMemoryUsageInIteration(100, 120, 120, 1, 1.2, 2),
-            new TimeExecuteMemoryUsageInIteration(120, 150, 159, 1.4, 1.9, 2),
-            new TimeExecuteMemoryUsageInIteration(150, 106, 160, 2, 3, 2),
+            new TimeExecuteMemoryUsageInIteration(100, 1000, 120, 1200, 120, 1200, 1, 1.2, 2),
+            new TimeExecuteMemoryUsageInIteration(120, 1200, 150, 1500, 159, 1590, 1.4, 1.9, 2),
+            new TimeExecuteMemoryUsageInIteration(150, 1500, 106, 1060, 160, 1600, 2, 3, 2),
         ],
         30,
+        300,
         160,
+        1600,
         0.2833,
         2,
         3,
     ])]
-    public function testTimeExecuteAndMemory(array $data, int $memUsage, int $memPeakUsage, float $timeExec, int $numOfTimes, int $iters): void
+    public function testTimeExecuteAndMemory(array $data, int $memUsage, int $memUsageReal, int $memPeakUsage, int $memPeakUsageReal, float $timeExec, int $numOfTimes, int $iters): void
     {
         $b = new BenchmarkTimeExecuteMemoryUsage($data);
 
         self::assertEquals($memUsage, $b->bytesUsage);
+        self::assertEquals($memUsageReal, $b->bytesUsageReal);
         self::assertEquals($memPeakUsage, $b->bytesPeakUsage);
+        self::assertEquals($memPeakUsageReal, $b->bytesPeakUsageReal);
         self::assertEquals($timeExec, round($b->time, 4));
         self::assertEquals($numOfTimes, $b->numberOfTimes);
         self::assertEquals($iters, $b->iterations);
@@ -62,7 +68,7 @@ class BenchmarkTimeExecuteMemoryUsageTest extends TestCase
         $this->expectExceptionMessage('given type "stdClass"');
 
         new BenchmarkTimeExecuteMemoryUsage([
-            new TimeExecuteMemoryUsageInIteration(1, 1, 1, 1, 1, 1),
+            new TimeExecuteMemoryUsageInIteration(1, 1, 1, 1, 1, 1, 1, 1, 1),
             'foo' => new stdClass(),
         ]);
     }
