@@ -8,6 +8,7 @@ use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 
 use function gc_collect_cycles;
 use function gc_enable;
+use function gc_enabled;
 use function hrtime;
 use function memory_get_peak_usage;
 use function memory_get_usage;
@@ -26,6 +27,10 @@ final class TimeMemoryService
         private readonly int $numberOfTimes,
     ) {
         if ($runGarbageCollector) {
+            if (!gc_enabled()) {
+                gc_enable();
+            }
+
             $this->collectedCyclesBefore = gc_collect_cycles();
         }
 
@@ -39,7 +44,6 @@ final class TimeMemoryService
         $endHrTime = hrtime(true);
 
         if ($this->runGarbageCollector) {
-            gc_enable();
             $this->collectedCyclesAfter = gc_collect_cycles();
         }
 
