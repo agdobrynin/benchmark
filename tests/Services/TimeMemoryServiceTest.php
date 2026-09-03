@@ -9,6 +9,8 @@ use Kaspi\Benchmark\Services\TimeMemoryService;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+use function gc_disable;
+
 /**
  * @internal
  */
@@ -34,5 +36,15 @@ class TimeMemoryServiceTest extends TestCase
         self::assertNull($service->getCollectedCyclesAfter());
 
         self::assertEquals(1, $item->numberOfTimes);
+    }
+
+    public function testGcDisabled(): void
+    {
+        gc_disable();
+
+        $service = new TimeMemoryService(true, 1);
+
+        self::assertIsInt($service->getCollectedCyclesBefore());
+        self::assertNull($service->getCollectedCyclesAfter());
     }
 }
