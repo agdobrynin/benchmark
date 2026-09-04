@@ -31,11 +31,14 @@ class BenchmarkResultsFileTest extends TestCase
         "bar": {
             "baz": [
                 {
-                    "startBytesUsageInIteration": 10,
-                    "endBytesUsageInIteration": 21,
+                    "startBytesUsage": 10,
+                    "startBytesUsageReal": 1000,
+                    "endBytesUsage": 21,
+                    "endBytesUsageReal": 2100,
                     "bytesPeakUsage": 21,
-                    "startTimeInIteration": 20.134,
-                    "endTimeInIteration": 22.987,
+                    "bytesPeakUsageReal": 2100,
+                    "startTime": 20.134,
+                    "endTime": 22.987,
                     "numberOfTimes": 1
                 }
             ]
@@ -118,15 +121,19 @@ class BenchmarkResultsFileTest extends TestCase
 
         self::assertTrue($items->valid());
 
+        /** @var TimeExecuteMemoryUsageInIteration $current */
         $current = $items->current();
         $key = $items->key();
 
         self::assertEquals(0, $key);
-        self::assertEquals(10, $current->startBytesUsageInIteration);
-        self::assertEquals(21, $current->endBytesUsageInIteration);
+        self::assertEquals(10, $current->startBytesUsage);
+        self::assertEquals(1000, $current->startBytesUsageReal);
+        self::assertEquals(21, $current->endBytesUsage);
+        self::assertEquals(2100, $current->endBytesUsageReal);
         self::assertEquals(21, $current->bytesPeakUsage);
-        self::assertEquals(20.134, $current->startTimeInIteration);
-        self::assertEquals(22.987, $current->endTimeInIteration);
+        self::assertEquals(2100, $current->bytesPeakUsageReal);
+        self::assertEquals(20.134, $current->startTime);
+        self::assertEquals(22.987, $current->endTime);
         self::assertEquals(1, $current->numberOfTimes);
 
         $items->next();
@@ -143,8 +150,11 @@ class BenchmarkResultsFileTest extends TestCase
             [
                 new TimeExecuteMemoryUsageInIteration(
                     11,
+                    1100,
                     20,
+                    2000,
                     20,
+                    2000,
                     24.222,
                     25.432,
                     2
@@ -180,11 +190,14 @@ class BenchmarkResultsFileTest extends TestCase
 
         self::assertEquals(0, $key);
 
-        self::assertEquals(11, $current->startBytesUsageInIteration);
-        self::assertEquals(20, $current->endBytesUsageInIteration);
+        self::assertEquals(11, $current->startBytesUsage);
+        self::assertEquals(1100, $current->startBytesUsageReal);
+        self::assertEquals(20, $current->endBytesUsage);
+        self::assertEquals(2000, $current->endBytesUsageReal);
         self::assertEquals(20, $current->bytesPeakUsage);
-        self::assertEquals(24.222, $current->startTimeInIteration);
-        self::assertEquals(25.432, $current->endTimeInIteration);
+        self::assertEquals(2000, $current->bytesPeakUsageReal);
+        self::assertEquals(24.222, $current->startTime);
+        self::assertEquals(25.432, $current->endTime);
         self::assertEquals(2, $current->numberOfTimes);
     }
 

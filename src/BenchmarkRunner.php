@@ -15,7 +15,7 @@ use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
-use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
+use Kaspi\Benchmark\Services\BenchmarkMetricsCollector;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
@@ -23,16 +23,11 @@ use ReflectionMethod;
 use RuntimeException;
 use TypeError;
 
-use function gc_collect_cycles;
-use function gc_enable;
 use function get_debug_type;
-use function hrtime;
 use function is_array;
 use function is_callable;
 use function is_int;
 use function is_string;
-use function memory_get_peak_usage;
-use function memory_get_usage;
 use function printf;
 use function sprintf;
 use function str_replace;
@@ -61,8 +56,6 @@ final class BenchmarkRunner
         object $benchmarkClass,
         object ...$_,
     ) {
-        gc_enable();
-
         $benchmarkGroups = [];
 
         foreach ([$benchmarkClass, ...$_] as $benchmarkObject) {
@@ -119,37 +112,24 @@ final class BenchmarkRunner
                         $benchmarkDescription = $benchmarkMethod->description;
                     }
 
+                    $timeMemory = new BenchmarkMetricsCollector(true, $benchmarkMethod->numberOfTimes);
+
                     for ($i = 1; $i <= $benchmarkMethod->iterations; ++$i) {
                         if ($this->showProgressBar) {
                             Formatter::progressBar($benchmarkDescription, $i, $benchmarkMethod->iterations, sizeBar: 33);
                         }
 
-                        gc_collect_cycles();
-
-                        $startMemoryUsage = memory_get_usage();
-                        $startHrTime = hrtime(true);
+                        $timeMemory->start();
 
                         // Execute the target method
                         for ($n = 0; $n < $benchmarkMethod->numberOfTimes; ++$n) {
                             $benchmarkMethod->targetReflectionMethod->invokeArgs($benchmarkGroup->benchmarkObject, $benchmarkArgs);
                         }
 
-                        gc_collect_cycles();
-
-                        $timeMemory = new TimeExecuteMemoryUsageInIteration(
-                            $startMemoryUsage,
-                            memory_get_usage(),
-                            memory_get_peak_usage(),
-                            $startHrTime,
-                            hrtime(true),
-                            $benchmarkMethod->numberOfTimes,
-                        );
-
-                        $benchmarkResults->attachIteration(
-                            $benchmarkDescription,
-                            $timeMemory
-                        );
+                        $timeMemory->end();
                     }
+
+                    $benchmarkResults->attachIterations($benchmarkDescription, $timeMemory->iterations());
 
                     if ($this->showProgressBar) {
                         echo "\n";
