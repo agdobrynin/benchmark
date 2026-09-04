@@ -29,11 +29,14 @@ use const JSON_THROW_ON_ERROR;
  * @phpstan-type BenchmarkGroupNameType non-empty-string
  * @phpstan-type BenchmarkDescriptionType non-empty-string
  * @phpstan-type TimeExecuteMemoryUsageInIterationType array{
- *     startBytesUsageInIteration: int,
- *     endBytesUsageInIteration: int,
+ *     startBytesUsage: int,
+ *     startBytesUsageReal: int,
+ *     endBytesUsage: int,
+ *     endBytesUsageReal: int,
  *     bytesPeakUsage: int,
- *     startTimeInIteration: float,
- *     endTimeInIteration: float,
+ *     bytesPeakUsageReal: int,
+ *     startTime: float,
+ *     endTime: float,
  *     numberOfTimes: int,
  * }
  */

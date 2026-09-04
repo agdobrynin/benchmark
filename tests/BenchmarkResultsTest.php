@@ -39,7 +39,7 @@ class BenchmarkResultsTest extends TestCase
     {
         $this->results->attachIteration(
             'Bar',
-            new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2)
+            new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2)
         );
 
         self::assertTrue($this->results->getResults()->valid());
@@ -58,11 +58,11 @@ class BenchmarkResultsTest extends TestCase
         // do attach item
         $this->results->attachIteration(
             'Bar',
-            new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2)
+            new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2)
         );
         $this->results->attachIteration(
             'Bar',
-            new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2)
+            new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2)
         );
 
         $iterations = $this->results->getResults();
@@ -101,8 +101,8 @@ class BenchmarkResultsTest extends TestCase
         $this->results->attachIterations(
             'Bar',
             [
-                new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2),
-                new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2),
+                new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2),
+                new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2),
             ]
         );
 
@@ -141,8 +141,8 @@ class BenchmarkResultsTest extends TestCase
         $this->results->attachIterations(
             'Bar',
             [
-                new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2),
-                new TimeExecuteMemoryUsageInIteration(2, 3, 3, 11.99, 12.05, 2),
+                new TimeExecuteMemoryUsageInIteration(1, 1000, 2, 2000, 2, 2000, 10.22, 10.99, 2),
+                new TimeExecuteMemoryUsageInIteration(2, 2000, 3, 3000, 3, 3000, 11.99, 12.05, 2),
             ]
         );
 
