@@ -33,9 +33,11 @@ class PrintCompareVersionsTest extends TestCase
 
         $this->expectOutputString('
 +--------------------------------+---------+-------+-------+---------------------------+-------------+
-| Benchmarks group               | Package | Iter. | Num.  | Max. memory: code / php   | Time        |
+| Benchmarks group               | Package | Iter. | Num.  | Memory (max)              | Time        |
 |  ↘️  Benchmark description     | version |       | of    +-------------+-------------+ execution   |
-|                                |         |       | times | Usage       | Peak        | per iterate |
+|                                |         |       | times | Usage code  | Peak code   | per iterate |
+|                                |         |       |       +-------------+-------------+             |
+|                                |         |       |       | Usage real  | Peak real   |             |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 | Foo group                                                                                          |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
