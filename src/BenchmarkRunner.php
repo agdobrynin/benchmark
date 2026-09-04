@@ -15,7 +15,7 @@ use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
-use Kaspi\Benchmark\Services\TimeMemoryService;
+use Kaspi\Benchmark\Services\BenchmarkMetricsCollector;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
@@ -112,23 +112,24 @@ final class BenchmarkRunner
                         $benchmarkDescription = $benchmarkMethod->description;
                     }
 
+                    $timeMemory = new BenchmarkMetricsCollector(true, $benchmarkMethod->numberOfTimes);
+
                     for ($i = 1; $i <= $benchmarkMethod->iterations; ++$i) {
                         if ($this->showProgressBar) {
                             Formatter::progressBar($benchmarkDescription, $i, $benchmarkMethod->iterations, sizeBar: 33);
                         }
 
-                        $timeMemory = new TimeMemoryService(true, $benchmarkMethod->numberOfTimes);
+                        $timeMemory->start();
 
                         // Execute the target method
                         for ($n = 0; $n < $benchmarkMethod->numberOfTimes; ++$n) {
                             $benchmarkMethod->targetReflectionMethod->invokeArgs($benchmarkGroup->benchmarkObject, $benchmarkArgs);
                         }
 
-                        $benchmarkResults->attachIteration(
-                            $benchmarkDescription,
-                            $timeMemory->create()
-                        );
+                        $timeMemory->end();
                     }
+
+                    $benchmarkResults->attachIterations($benchmarkDescription, $timeMemory->iterations());
 
                     if ($this->showProgressBar) {
                         echo "\n";
