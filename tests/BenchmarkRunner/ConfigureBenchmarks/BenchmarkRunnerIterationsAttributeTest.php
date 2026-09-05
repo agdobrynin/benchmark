@@ -10,7 +10,9 @@ use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Formatter;
+use Kaspi\Benchmark\Services\EnvParams;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -25,6 +27,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(Formatter::class)]
+#[UsesClass(EnvBenchmark::class)]
+#[UsesClass(EnvParams::class)]
 class BenchmarkRunnerIterationsAttributeTest extends TestCase
 {
     public function testIterationsNotDefined(): void

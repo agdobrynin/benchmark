@@ -8,6 +8,8 @@ use Generator;
 use Kaspi\Benchmark\Attributes\Benchmark;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
+use Kaspi\Benchmark\Services\EnvParams;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -19,6 +21,8 @@ use RuntimeException;
  */
 #[CoversClass(BenchmarkRunner::class)]
 #[UsesClass(BenchmarkResults::class)]
+#[UsesClass(EnvBenchmark::class)]
+#[UsesClass(EnvParams::class)]
 class BenchmarkRunnerConfigureBenchmarkMethodTest extends TestCase
 {
     #[DataProvider('dataProvider')]

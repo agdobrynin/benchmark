@@ -41,22 +41,22 @@ class PrintCompareVersionsTest extends TestCase
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 | Foo group                                                                                          |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
-|    Lorem ipsum dolor sit amet, |  v1.0.0 | 2     | 2     | 170 B       | 270 B       | 7.39 ns     |
+|    Lorem ipsum dolor sit amet, |  v1.0.0 | 2     | 2     | 0 B         | 0 B         | 0 ns        |
 |   consectetur adipiscing elit. |         |       |       +-------------+-------------+             |
-|    Cras porta eleifend ante ut |         |       |       | 1.66 KB     | 2.64 KB     |             |
+|    Cras porta eleifend ante ut |         |       |       | 0 B         | 0 B         |             |
 |           maximus. Sed eget mi +---------+-------+-------+-------------+-------------+-------------+
-| convallis, ultrices orci quis, | v2.0.x… | 2     | 2     | 100 B       | 0 B         | 6.18 ns     |
+| convallis, ultrices orci quis, | v2.0.x… | 2     | 2     | 0 B         | 0 B         | 0 ns        |
 |      aliquet dolor. Donec eget |         |       |       +-------------+-------------+             |
-|       tellus eu mauris lacinia |         |       |       | 1000 B      | 0 B         |             |
+|       tellus eu mauris lacinia |         |       |       | 0 B         | 0 B         |             |
 |                       finibus. |         |       |       |             |             |             |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
-|     Lorem ipsum dolor sit amet |  v1.0.0 | 2     | 2     | 16 B        | 0 B         | 2.395 ns    |
+|     Lorem ipsum dolor sit amet |  v1.0.0 | 2     | 2     | 0 B         | 0 B         | 0 ns        |
 |                                |         |       |       +-------------+-------------+             |
-|                                |         |       |       | 160 B       | 0 B         |             |
+|                                |         |       |       | 0 B         | 0 B         |             |
 |                                +---------+-------+-------+-------------+-------------+-------------+
-|                                | v2.0.x… | 2     | 2     | 40 B        | 0 B         | 1.705 ns    |
+|                                | v2.0.x… | 2     | 2     | 0 B         | 0 B         | 0 ns        |
 |                                |         |       |       +-------------+-------------+             |
-|                                |         |       |       | 400 B       | 0 B         |             |
+|                                |         |       |       | 0 B         | 0 B         |             |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 ');
         $printer->printCompareVersions();

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Kaspi\Benchmark\Tests;
 
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
+use Kaspi\Benchmark\Services\EnvParams;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -19,6 +21,8 @@ use function round;
 #[CoversClass(BenchmarkResults::class)]
 #[CoversClass(BenchmarkTimeExecuteMemoryUsage::class)]
 #[UsesClass(TimeExecuteMemoryUsageInIteration::class)]
+#[UsesClass(EnvBenchmark::class)]
+#[UsesClass(EnvParams::class)]
 class BenchmarkResultsTest extends TestCase
 {
     protected BenchmarkResults $results;
@@ -26,7 +30,7 @@ class BenchmarkResultsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->results = new BenchmarkResults('0.0.1', 'Foo');
+        $this->results = new BenchmarkResults('0.0.1', 'Foo', EnvParams::autoConfigureEnvBenchmark());
     }
 
     protected function tearDown(): void
