@@ -6,6 +6,7 @@ namespace Kaspi\Benchmark\Services;
 
 use Kaspi\Benchmark\DTO\EnvBenchmark;
 
+use function extension_loaded;
 use function ini_get;
 use function strtolower;
 
@@ -15,10 +16,10 @@ final class EnvParams
 {
     public static function autoConfigureEnvBenchmark(): EnvBenchmark
     {
-        $opcacheExt = ini_get('zend_extension');
+        $opcacheExt = extension_loaded('Zend OPcache');
         $opcacheCli = ini_get('opcache.enable_cli');
 
-        if (false !== $opcacheExt
+        if ($opcacheExt
             && false !== $opcacheCli
             && ('1' === $opcacheCli || 'on' === strtolower($opcacheCli))) {
             $opcacheEnableCli = true;
