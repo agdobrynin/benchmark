@@ -17,9 +17,11 @@ use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\Formatter;
 use Kaspi\Benchmark\Services\BenchmarkMetricsCollector;
+use Kaspi\Benchmark\Services\EnvParams;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -42,6 +44,8 @@ use RuntimeException;
 #[UsesClass(Iterations::class)]
 #[UsesClass(NumberOfTimes::class)]
 #[UsesClass(Formatter::class)]
+#[UsesClass(EnvBenchmark::class)]
+#[UsesClass(EnvParams::class)]
 class BenchmarkRunnerDoBenchmarksTest extends TestCase
 {
     public function testRunBenchmarkInvalidParametersReturnType(): void

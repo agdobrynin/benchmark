@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kaspi\Benchmark\Tests;
 
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\Services\EnvParams;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
@@ -20,6 +21,8 @@ use function round;
 #[CoversClass(BenchmarkResults::class)]
 #[CoversClass(BenchmarkTimeExecuteMemoryUsage::class)]
 #[UsesClass(TimeExecuteMemoryUsageInIteration::class)]
+#[UsesClass(EnvBenchmark::class)]
+#[UsesClass(EnvParams::class)]
 class BenchmarkResultsTest extends TestCase
 {
     protected BenchmarkResults $results;

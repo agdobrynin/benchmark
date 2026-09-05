@@ -12,7 +12,9 @@ use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Formatter;
+use Kaspi\Benchmark\Services\EnvParams;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -27,6 +29,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Formatter::class)]
 #[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(BenchmarkResults::class)]
+#[UsesClass(EnvBenchmark::class)]
+#[UsesClass(EnvParams::class)]
 class BenchmarkRunnerParametersAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'Parameters for the benchmark method must be of a callable type or a list of callable types';
