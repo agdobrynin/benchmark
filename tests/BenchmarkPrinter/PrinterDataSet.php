@@ -7,6 +7,7 @@ namespace Kaspi\Benchmark\Tests\BenchmarkPrinter;
 use Generator;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
+use Kaspi\Benchmark\Services\EnvParams;
 
 final class PrinterDataSet
 {
@@ -15,7 +16,7 @@ final class PrinterDataSet
         $benchDescriptionOne = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus. Sed eget mi convallis, ultrices orci quis, aliquet dolor. Donec eget tellus eu mauris lacinia finibus.';
         $benchDescriptionTwo = 'Lorem ipsum dolor sit amet';
 
-        $resOne = new BenchmarkResults('v1.0.0', 'Foo group');
+        $resOne = new BenchmarkResults('v1.0.0', 'Foo group', EnvParams::autoConfigureEnvBenchmark());
         $resOne->attachIterations(
             $benchDescriptionOne,
             [
@@ -32,7 +33,7 @@ final class PrinterDataSet
             ]
         );
 
-        $resTwo = new BenchmarkResults('v2.0.x-dev', 'Foo group');
+        $resTwo = new BenchmarkResults('v2.0.x-dev', 'Foo group', EnvParams::autoConfigureEnvBenchmark());
         $resTwo->attachIterations(
             $benchDescriptionOne,
             [

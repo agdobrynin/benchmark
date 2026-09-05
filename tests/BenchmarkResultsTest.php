@@ -6,6 +6,7 @@ namespace Kaspi\Benchmark\Tests;
 
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
+use Kaspi\Benchmark\Services\EnvParams;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -26,7 +27,7 @@ class BenchmarkResultsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->results = new BenchmarkResults('0.0.1', 'Foo');
+        $this->results = new BenchmarkResults('0.0.1', 'Foo', EnvParams::autoConfigureEnvBenchmark());
     }
 
     protected function tearDown(): void

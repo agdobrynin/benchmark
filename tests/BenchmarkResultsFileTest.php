@@ -7,7 +7,9 @@ namespace Kaspi\Benchmark\Tests;
 use Generator;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkResultsFile;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
+use Kaspi\Benchmark\Services\EnvParams;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -17,34 +19,47 @@ use RuntimeException;
 
 use function file_get_contents;
 use function file_put_contents;
+use function str_replace;
 
 /**
  * @internal
  */
 #[CoversClass(BenchmarkResultsFile::class)]
 #[CoversClass(TimeExecuteMemoryUsageInIteration::class)]
+#[CoversClass(EnvBenchmark::class)]
 #[UsesClass(BenchmarkResults::class)]
+#[UsesClass(EnvParams::class)]
 class BenchmarkResultsFileTest extends TestCase
 {
+    // ⚠️ need replace `'%hash-env%'` before test
     protected const jsonExist = '{
-    "foo": {
-        "bar": {
-            "baz": [
-                {
-                    "startBytesUsage": 10,
-                    "startBytesUsageReal": 1000,
-                    "endBytesUsage": 21,
-                    "endBytesUsageReal": 2100,
-                    "bytesPeakUsage": 21,
-                    "bytesPeakUsageReal": 2100,
-                    "startTime": 20.134,
-                    "endTime": 22.987,
-                    "numberOfTimes": 1
+    "%hash-env%": {
+        "env": {
+            "phpVersionId": 80100,
+            "opcacheEnableCli": false
+        },
+        "packageVersion": {
+            "foo": {
+                "bar": {
+                    "baz": [
+                        {
+                            "startBytesUsage": 10,
+                            "startBytesUsageReal": 1000,
+                            "endBytesUsage": 21,
+                            "endBytesUsageReal": 2100,
+                            "bytesPeakUsage": 21,
+                            "bytesPeakUsageReal": 2100,
+                            "startTime": 20.134,
+                            "endTime": 22.987,
+                            "numberOfTimes": 1
+                        }
+                    ]
                 }
-            ]
+            }
         }
     }
 }';
+    protected string $envKey;
     protected string $outputFile;
 
     protected function setUp(): void
@@ -75,17 +90,6 @@ class BenchmarkResultsFileTest extends TestCase
         self::assertFalse($file->read()->valid());
     }
 
-    public function testReadExistFileWrongJsonFormat(): void
-    {
-        $outputFile = vfsStream::newFile('res.json');
-        $outputFile->setContent('{aaa}');
-        vfsStream::setup()->addChild($outputFile);
-
-        $file = new BenchmarkResultsFile($outputFile->url());
-
-        self::assertFalse($file->read()->valid());
-    }
-
     public function testReadExistFileWhenSourceJsonIsNotArray(): void
     {
         $outputFile = vfsStream::newFile('res.json');
@@ -99,7 +103,9 @@ class BenchmarkResultsFileTest extends TestCase
 
     public function testSaveResultsWithReplaceBenchmark(): void
     {
-        file_put_contents($this->outputFile, self::jsonExist);
+        $env = new EnvBenchmark(80100, false);
+        $json = str_replace('%hash-env%', $env->toHash(), self::jsonExist);
+        file_put_contents($this->outputFile, $json);
 
         $file = new BenchmarkResultsFile($this->outputFile);
 
@@ -112,6 +118,9 @@ class BenchmarkResultsFileTest extends TestCase
 
         self::assertEquals('foo', $resExistGet->packageVersion);
         self::assertEquals('bar', $resExistGet->groupName);
+        self::assertEquals(80100, $resExistGet->env->phpVersionId);
+        self::assertFalse($resExistGet->env->opcacheEnableCli);
+
         $iterations = $resExistGet->getResults();
 
         self::assertTrue($iterations->valid());
@@ -144,7 +153,7 @@ class BenchmarkResultsFileTest extends TestCase
 
         self::assertFalse($iterations->valid());
 
-        $resSet = new BenchmarkResults('foo', 'bar');
+        $resSet = new BenchmarkResults('foo', 'bar', $env);
         $resSet->attachIterations(
             'baz',
             [
@@ -204,7 +213,7 @@ class BenchmarkResultsFileTest extends TestCase
     public function testReset(): void
     {
         $file = new BenchmarkResultsFile($this->outputFile);
-        $file->attach(new BenchmarkResults('foo', 'bar'));
+        $file->attach(new BenchmarkResults('foo', 'bar', EnvParams::autoConfigureEnvBenchmark()));
 
         self::assertTrue($file->getAttached()->valid());
 
@@ -226,89 +235,207 @@ class BenchmarkResultsFileTest extends TestCase
 
     public static function dataProviderForValidator(): Generator
     {
-        yield 'package version is empty string' => [
-            '{
-                "": {
-                    "bar": {
-                        "baz": []
-                    }
-                }
-            }',
-            'The package version must be a non-empty string',
+        yield 'invalid json' => [
+            'foo',
+            'Unable to parse the JSON',
         ];
 
-        yield 'not defined package groups' => [
+        yield 'env hash is empty' => [
             '{
-                "foo": {
+                "": {}
+            }',
+            'Env hash must be a non-empty string',
+        ];
+
+        yield 'env section undefined' => [
+            '{
+                "hash-env-1234": {}
+            }',
+            'Env hash "hash-env-1234" must contain an "env" section',
+        ];
+
+        yield 'env section invalid' => [
+            '{
+                "hash-env-1234": {
+                    "env": "foo"
                 }
             }',
-            'must contain benchmark groups as a non-empty array',
+            'The section "env" defined in env hash "hash-env-1234" must be a non-empty array',
+        ];
+
+        yield 'packageVersion not defined' => [
+            '{
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   }
+                }
+            }',
+            'The section "packageVersion" not defined in env hash "hash-env-1234"',
+        ];
+
+        yield 'package versions is empty array' => [
+            '{
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   },
+                   "packageVersion": {}
+                }
+            }',
+            'The section "packageVersion" defined in env hash "hash-env-1234" must be non-empty array',
+        ];
+
+        yield 'package version is empty string' => [
+            '{
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   },
+                   "packageVersion": {
+                       "": {
+                            "bar": {
+                                "baz": []
+                            }
+                       }
+                   }
+                }
+            }',
+            'The package version defined in env hash "hash-env-1234" must be a non-empty string',
+        ];
+
+        yield 'not defined benchmark groups' => [
+            '{
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   },
+                   "packageVersion": {
+                       "v1.0.0": {}
+                   }
+                }
+            }',
+            'A package of version \'v1.0.0\' defined in env hash "hash-env-1234" must contain benchmark groups as a non-empty array',
         ];
 
         yield 'group name is empty string' => [
             '{
-                "foo": {
-                    "": {
-                        "baz": []
-                    }
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   },
+                   "packageVersion": {
+                       "v1.0.0": {
+                            "": {
+                                "bar": {
+                                    "baz": []
+                                }
+                            }
+                       }
+                   }
                 }
             }',
-            'each group name is a non-empty string',
+            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" must contain benchmark groups as a non-empty array',
         ];
 
-        yield 'benchmark results is string' => [
+        yield 'benchmark results is empty array' => [
             '{
-                "foo": {
-                    "bar": "qux"
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   },
+                   "packageVersion": {
+                       "v1.0.0": {
+                            "foo": {}
+                       }
+                   }
                 }
             }',
-            'must contain benchmark results as a non-empty array',
+            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' must contain benchmark results as a non-empty array',
         ];
 
         yield 'benchmark description is empty string' => [
             '{
-                "foo": {
-                    "bar": {
-                        "": []
-                    }
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   },
+                   "packageVersion": {
+                       "v1.0.0": {
+                            "foo": {
+                                "": []
+                            }
+                       }
+                   }
                 }
             }',
-            'must contain a benchmark description as a non-empty string',
+            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' must contain a benchmark description as a non-empty string',
         ];
 
-        yield 'benchmark iterations is string' => [
+        yield 'benchmark results as string' => [
             '{
-                "foo": {
-                    "bar": {
-                        "baz": "qux"
-                    }
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   },
+                   "packageVersion": {
+                       "v1.0.0": {
+                            "foo": {
+                                "bar": "baz"
+                            }
+                       }
+                   }
                 }
             }',
-            'must contain iteration elements as a non-empty array',
+            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' and benchmark \'bar\' must contain iteration elements as a non-empty array',
         ];
 
-        yield 'benchmark iteration items is string' => [
+        yield 'Empty benchmark metrics' => [
             '{
-                "foo": {
-                    "bar": {
-                        "baz": "qux"
-                    }
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   },
+                   "packageVersion": {
+                       "v1.0.0": {
+                            "foo": {
+                                "bar": []
+                            }
+                       }
+                   }
                 }
             }',
-            'must contain iteration elements as a non-empty array',
+            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' and benchmark \'bar\' must contain iteration elements as a non-empty array',
         ];
 
-        yield 'benchmark iteration wrong structure' => [
+        yield 'Invalid benchmark metrics' => [
             '{
-                "foo": {
-                    "bar": {
-                        "baz": [
-                            "qux"
-                        ]
-                    }
+                "hash-env-1234": {
+                   "env": {
+                      "phpVersionId": 80100,
+                      "opcacheEnableCli": false
+                   },
+                   "packageVersion": {
+                       "v1.0.0": {
+                            "foo": {
+                                "bar": [
+                                    "baz"
+                                ]
+                            }
+                       }
+                   }
                 }
             }',
-            'each element must be represented as a non-empty array',
+            'where each element must be represented as a non-empty array with keys matching the public properties of class Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration',
         ];
     }
 }
