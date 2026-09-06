@@ -14,7 +14,6 @@ use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Formatter;
-use Kaspi\Benchmark\Services\EnvParams;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -30,10 +29,16 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(EnvBenchmark::class)]
-#[UsesClass(EnvParams::class)]
 class BenchmarkRunnerParametersAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'Parameters for the benchmark method must be of a callable type or a list of callable types';
+    protected EnvBenchmark $env;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->env = new EnvBenchmark();
+    }
 
     public function testInvalidParametersAttributeOnClass(): void
     {
@@ -42,7 +47,7 @@ class BenchmarkRunnerParametersAttributeTest extends TestCase
 
         $class = new #[Parameters(['wrong'])] class() {};
 
-        new BenchmarkRunner('foo', $class);
+        new BenchmarkRunner('foo', $this->env, $class);
     }
 
     public function testInvalidParametersAttributeOnMethod(): void
@@ -56,7 +61,7 @@ class BenchmarkRunnerParametersAttributeTest extends TestCase
             public function doBenchmark(): void {}
         };
 
-        new BenchmarkRunner('foo', $class);
+        new BenchmarkRunner('foo', $this->env, $class);
     }
 
     public function testParametersAttributeOnClassAndMethod(): void
@@ -77,7 +82,7 @@ class BenchmarkRunnerParametersAttributeTest extends TestCase
             }
         };
 
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertCount(1, $runner->benchmarkGroups);
 

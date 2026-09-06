@@ -6,14 +6,36 @@ namespace Kaspi\Benchmark\DTO;
 
 use Stringable;
 
+use function extension_loaded;
 use function implode;
+use function ini_get;
 use function intdiv;
 use function md5;
 use function sprintf;
+use function strtolower;
+
+use const PHP_VERSION_ID;
 
 final class EnvBenchmark implements Stringable
 {
-    public function __construct(public readonly int $phpVersionId, public readonly bool $opcacheEnableCli) {}
+    public readonly int $phpVersionId;
+    public readonly bool $opcacheEnableCli;
+
+    public function __construct(?int $phpVersionId = null, ?bool $opcacheEnableCli = null)
+    {
+        $this->phpVersionId = $phpVersionId ?? PHP_VERSION_ID;
+
+        if (null !== $opcacheEnableCli) {
+            $this->opcacheEnableCli = $opcacheEnableCli;
+        } else {
+            $opcacheExt = extension_loaded('Zend OPcache');
+            $opcacheCli = ini_get('opcache.enable_cli');
+
+            $this->opcacheEnableCli = $opcacheExt
+                && false !== $opcacheCli
+                && ('1' === $opcacheCli || 'on' === strtolower($opcacheCli));
+        }
+    }
 
     public function __toString(): string
     {

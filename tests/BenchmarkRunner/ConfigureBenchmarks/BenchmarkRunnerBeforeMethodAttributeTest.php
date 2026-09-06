@@ -13,7 +13,6 @@ use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Formatter;
-use Kaspi\Benchmark\Services\EnvParams;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -29,10 +28,17 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(Formatter::class)]
 #[UsesClass(EnvBenchmark::class)]
-#[UsesClass(EnvParams::class)]
 class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
 {
     protected const EXCEPTION_MESSAGE = 'The value of parameter `$beforeMethod` must be a non-empty string or a non-empty list of strings. Each value must refer to an existing class method.';
+
+    protected EnvBenchmark $env;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->env = new EnvBenchmark();
+    }
 
     public function testInvalidBeforeMethodAttributeOnClassUnknownMethod(): void
     {
@@ -40,7 +46,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[BeforeMethod('unknownMethod')] class() {};
-        new BenchmarkRunner('foo', $class);
+        new BenchmarkRunner('foo', $this->env, $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnClassEmptyStringMethod(): void
@@ -49,7 +55,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[BeforeMethod('')] class() {};
-        new BenchmarkRunner('foo', $class);
+        new BenchmarkRunner('foo', $this->env, $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnClassArrayWithUnknownMethod(): void
@@ -58,7 +64,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[BeforeMethod(['unknownMethod'])] class() {};
-        new BenchmarkRunner('foo', $class);
+        new BenchmarkRunner('foo', $this->env, $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnClassArrayWithEmptyString(): void
@@ -67,7 +73,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
         $this->expectExceptionMessage(self::EXCEPTION_MESSAGE);
 
         $class = new #[BeforeMethod([''])] class() {};
-        new BenchmarkRunner('foo', $class);
+        new BenchmarkRunner('foo', $this->env, $class);
     }
 
     public function testInvalidBeforeMethodAttributeOnMethodUnknownName(): void
@@ -81,7 +87,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
             public function doBenchmark(): void {}
         };
 
-        new BenchmarkRunner('foo', $class);
+        new BenchmarkRunner('foo', $this->env, $class);
     }
 
     public function testConfiguredBeforeMethodAttributeOnClassAndOnMethods(): void
@@ -101,7 +107,7 @@ class BenchmarkRunnerBeforeMethodAttributeTest extends TestCase
             public function doBenchQuz(): void {}
         };
 
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertCount(1, $runner->benchmarkGroups);
         self::assertCount(2, $runner->benchmarkGroups[0]->benchmarkMethods);

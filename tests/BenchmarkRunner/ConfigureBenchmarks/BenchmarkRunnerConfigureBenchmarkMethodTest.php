@@ -9,7 +9,6 @@ use Kaspi\Benchmark\Attributes\Benchmark;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\EnvBenchmark;
-use Kaspi\Benchmark\Services\EnvParams;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -22,16 +21,23 @@ use RuntimeException;
 #[CoversClass(BenchmarkRunner::class)]
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(EnvBenchmark::class)]
-#[UsesClass(EnvParams::class)]
 class BenchmarkRunnerConfigureBenchmarkMethodTest extends TestCase
 {
+    protected EnvBenchmark $env;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->env = new EnvBenchmark();
+    }
+
     #[DataProvider('dataProvider')]
     public function testBenchmarkMethodFail(object $class): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('must be declared with public and non-static modifiers.');
 
-        new BenchmarkRunner('foo', $class);
+        new BenchmarkRunner('foo', $this->env, $class);
     }
 
     public static function dataProvider(): Generator

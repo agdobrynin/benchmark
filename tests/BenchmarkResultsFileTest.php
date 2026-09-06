@@ -9,7 +9,6 @@ use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkResultsFile;
 use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
-use Kaspi\Benchmark\Services\EnvParams;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -28,7 +27,6 @@ use function str_replace;
 #[CoversClass(TimeExecuteMemoryUsageInIteration::class)]
 #[CoversClass(EnvBenchmark::class)]
 #[UsesClass(BenchmarkResults::class)]
-#[UsesClass(EnvParams::class)]
 class BenchmarkResultsFileTest extends TestCase
 {
     // ⚠️ need replace `'%hash-env%'` before test
@@ -61,12 +59,20 @@ class BenchmarkResultsFileTest extends TestCase
 }';
     protected string $envKey;
     protected string $outputFile;
+    protected EnvBenchmark $env;
 
     protected function setUp(): void
     {
         parent::setUp();
         vfsStream::setup();
         $this->outputFile = vfsStream::url('root/output.json');
+        $this->env = new EnvBenchmark();
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->env, $this->outputFile);
     }
 
     public function testSaveEmptyResults(): void
@@ -213,7 +219,7 @@ class BenchmarkResultsFileTest extends TestCase
     public function testReset(): void
     {
         $file = new BenchmarkResultsFile($this->outputFile);
-        $file->attach(new BenchmarkResults('foo', 'bar', EnvParams::autoConfigureEnvBenchmark()));
+        $file->attach(new BenchmarkResults('foo', 'bar', $this->env));
 
         self::assertTrue($file->getAttached()->valid());
 

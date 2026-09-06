@@ -11,7 +11,6 @@ use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Formatter;
-use Kaspi\Benchmark\Services\EnvParams;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -26,9 +25,16 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(Formatter::class)]
 #[UsesClass(EnvBenchmark::class)]
-#[UsesClass(EnvParams::class)]
 class BenchmarkRunnerSortingAndDescriptionMethodsTest extends TestCase
 {
+    protected EnvBenchmark $env;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->env = new EnvBenchmark();
+    }
+
     public function testSort(): void
     {
         $class = new class {
@@ -42,7 +48,7 @@ class BenchmarkRunnerSortingAndDescriptionMethodsTest extends TestCase
             public function doBenchThree(): void {}
         };
 
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertCount(1, $runner->benchmarkGroups);
 

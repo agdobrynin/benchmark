@@ -17,7 +17,6 @@ use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Services\BenchmarkMetricsCollector;
-use Kaspi\Benchmark\Services\EnvParams;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
@@ -47,8 +46,6 @@ final class BenchmarkRunner
 
     private bool $showProgressBar = true;
 
-    private readonly EnvBenchmark $env;
-
     /**
      * @param non-empty-string $packageVersion
      *
@@ -57,11 +54,11 @@ final class BenchmarkRunner
      */
     public function __construct(
         public readonly string $packageVersion,
+        public readonly EnvBenchmark $env,
         object $benchmarkClass,
         object ...$_,
     ) {
         $benchmarkGroups = [];
-        $this->env = EnvParams::autoConfigureEnvBenchmark();
 
         foreach ([$benchmarkClass, ...$_] as $benchmarkObject) {
             $benchmarkGroups[] = $this->configureBenchmarkGroup($benchmarkObject);
