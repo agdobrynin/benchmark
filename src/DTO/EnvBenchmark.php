@@ -42,6 +42,9 @@ final class EnvBenchmark implements Stringable
         return new self(PHP_VERSION_ID, $opcacheEnableCli);
     }
 
+    /**
+     * @return non-empty-string
+     */
     public function toHash(): string
     {
         return md5(implode('|', [$this->phpVersionId, $this->opcacheEnableCli]));
