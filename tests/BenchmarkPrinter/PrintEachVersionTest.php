@@ -7,6 +7,7 @@ namespace Kaspi\Benchmark\Tests\BenchmarkPrinter;
 use InvalidArgumentException;
 use Kaspi\Benchmark\BenchmarkPrinter;
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\Formatter;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
@@ -23,6 +24,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(TimeExecuteMemoryUsageInIteration::class)]
 #[UsesClass(Formatter::class)]
 #[UsesClass(BenchmarkTimeExecuteMemoryUsage::class)]
+#[UsesClass(EnvBenchmark::class)]
 class PrintEachVersionTest extends TestCase
 {
     #[DataProviderExternal(PrinterDataSet::class, 'benchmarkResults')]
@@ -32,7 +34,8 @@ class PrintEachVersionTest extends TestCase
         $printer->attach($res, ...$_);
 
         $this->expectOutputString('
-
++--------------------------------------------------------------------------------------------------+
+| PHP runtime: 8.1.0 , OPCache: off                                                                |
 +--------------------------------------------------------------------------------------------------+
 | v1.0.0                                                                                           |
 +----------------------------------------+-------+-------+---------------------------+-------------+
@@ -55,8 +58,6 @@ class PrintEachVersionTest extends TestCase
 |                                        |       |       +-------------+-------------+             |
 |                                        |       |       | 0 B         | 0 B         |             |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
-
-+--------------------------------------------------------------------------------------------------+
 | v2.0.x-dev                                                                                       |
 +----------------------------------------+-------+-------+---------------------------+-------------+
 | Benchmark description                  | Iter. | Num.  | Memory (max)              | Time        |

@@ -32,6 +32,8 @@ class PrintCompareVersionsTest extends TestCase
         $printer->attach($res, ...$_);
 
         $this->expectOutputString('
++----------------------------------------------------------------------------------------------------+
+| PHP runtime: 8.1.0 , OPCache: off                                                                  |
 +--------------------------------+---------+-------+-------+---------------------------+-------------+
 | Benchmarks group               | Package | Iter. | Num.  | Memory (max)              | Time        |
 |  ↘️  Benchmark description     | version |       | of    +-------------+-------------+ execution   |
