@@ -31,6 +31,12 @@ class BenchmarkRunnerConfigureBenchmarkMethodTest extends TestCase
         $this->env = new EnvBenchmark();
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->env);
+    }
+
     #[DataProvider('dataProvider')]
     public function testBenchmarkMethodFail(object $class): void
     {

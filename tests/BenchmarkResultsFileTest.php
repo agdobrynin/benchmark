@@ -57,7 +57,6 @@ class BenchmarkResultsFileTest extends TestCase
         }
     }
 }';
-    protected string $envKey;
     protected string $outputFile;
     protected EnvBenchmark $env;
 

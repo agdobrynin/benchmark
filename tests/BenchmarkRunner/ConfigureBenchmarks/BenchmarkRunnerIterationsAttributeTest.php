@@ -37,6 +37,12 @@ class BenchmarkRunnerIterationsAttributeTest extends TestCase
         $this->env = new EnvBenchmark();
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->env);
+    }
+
     public function testIterationsNotDefined(): void
     {
         $class = new class {

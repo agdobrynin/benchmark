@@ -37,6 +37,12 @@ class BenchmarkRunnerNumberOfTimesAttributeTest extends TestCase
         $this->env = new EnvBenchmark();
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->env);
+    }
+
     public function testNumberOfTimesNotDefined(): void
     {
         $class = new class {

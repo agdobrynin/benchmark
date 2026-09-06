@@ -40,6 +40,12 @@ class BenchmarkRunnerParametersAttributeTest extends TestCase
         $this->env = new EnvBenchmark();
     }
 
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->env);
+    }
+
     public function testInvalidParametersAttributeOnClass(): void
     {
         $this->expectException(InvalidArgumentException::class);
