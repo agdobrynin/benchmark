@@ -94,9 +94,10 @@ final class BenchmarkResultsFile
         $fileResults = $this->getArrayFromFile();
 
         foreach ($this->attachedBenchmarkResults as $benchmarkResults) {
-            $fileResults[$benchmarkResults->env->toHash()][self::ENV_SECTION_KEY] = (array) $benchmarkResults->env;
-            $resultsToFile = [];
-            $fileResults[$benchmarkResults->env->toHash()][self::PACKAGE_VERSION_KEY] = &$resultsToFile;
+            $envHash = $benchmarkResults->env->toHash();
+            $packageVersion = $benchmarkResults->packageVersion;
+            $groupName = $benchmarkResults->groupName;
+            $fileResults[$envHash][self::ENV_SECTION_KEY] = (array) $benchmarkResults->env;
 
             /**
              * @var Generator<TimeExecuteMemoryUsageInIteration> $timeExecuteMemoryUsageInIterationItems
@@ -108,7 +109,7 @@ final class BenchmarkResultsFile
                     $items[] = (array) $timeExecuteMemoryUsageInIteration;
                 }
 
-                $resultsToFile[$benchmarkResults->packageVersion][$benchmarkResults->groupName][$benchmarkDescription] = $items;
+                $fileResults[$envHash][self::PACKAGE_VERSION_KEY][$packageVersion][$groupName][$benchmarkDescription] = $items;
                 unset($items);
             }
         }
