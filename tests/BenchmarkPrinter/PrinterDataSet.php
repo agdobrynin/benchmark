@@ -21,11 +21,13 @@ final class PrinterDataSet
         $benchDescriptionOne = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus. Sed eget mi convallis, ultrices orci quis, aliquet dolor. Donec eget tellus eu mauris lacinia finibus.';
         $benchDescriptionTwo = 'Lorem ipsum dolor sit amet';
 
-        $resOne = new BenchmarkResults('v1.0.0', 'Foo group', new EnvBenchmark());
+        $envOne = new EnvBenchmark(80100, false);
+
+        $resOne = new BenchmarkResults('v1.0.0', 'Foo group', $envOne);
         $resOne->attachIterations($benchDescriptionOne, $iterFixtures);
         $resOne->attachIterations($benchDescriptionTwo, $iterFixtures);
 
-        $resTwo = new BenchmarkResults('v2.0.x-dev', 'Foo group', new EnvBenchmark());
+        $resTwo = new BenchmarkResults('v2.0.x-dev', 'Foo group', $envOne);
         $resTwo->attachIterations($benchDescriptionOne, $iterFixtures);
         $resTwo->attachIterations($benchDescriptionTwo, $iterFixtures);
 

@@ -19,6 +19,8 @@ use PHPUnit\Framework\TestCase;
 
 use function array_column;
 
+use const PHP_VERSION_ID;
+
 /**
  * @internal
  */
@@ -39,7 +41,7 @@ class BenchmarkRunnerAfterMethodAttributeTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->env = new EnvBenchmark();
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
     }
 
     public function testInvalidAfterMethodAttributeOnClassUnknownMethod(): void

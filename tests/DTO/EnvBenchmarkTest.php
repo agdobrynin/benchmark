@@ -30,4 +30,11 @@ class EnvBenchmarkTest extends TestCase
     {
         self::assertEquals($expect, (string) new EnvBenchmark($phpVerId, $opcache));
     }
+
+    public function testCreateFrom(): void
+    {
+        $env = EnvBenchmark::fromCurrentEnv();
+
+        self::assertEquals(PHP_VERSION_ID, $env->phpVersionId);
+    }
 }

@@ -26,6 +26,8 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
+use const PHP_VERSION_ID;
+
 /**
  * @internal
  */
@@ -51,7 +53,7 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->env = new EnvBenchmark();
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
     }
 
     protected function tearDown(): void

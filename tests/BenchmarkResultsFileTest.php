@@ -20,6 +20,8 @@ use function file_get_contents;
 use function file_put_contents;
 use function str_replace;
 
+use const PHP_VERSION_ID;
+
 /**
  * @internal
  */
@@ -65,7 +67,7 @@ class BenchmarkResultsFileTest extends TestCase
         parent::setUp();
         vfsStream::setup();
         $this->outputFile = vfsStream::url('root/output.json');
-        $this->env = new EnvBenchmark();
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
     }
 
     protected function tearDown(): void

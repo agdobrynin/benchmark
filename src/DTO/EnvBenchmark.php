@@ -18,24 +18,7 @@ use const PHP_VERSION_ID;
 
 final class EnvBenchmark implements Stringable
 {
-    public readonly int $phpVersionId;
-    public readonly bool $opcacheEnableCli;
-
-    public function __construct(?int $phpVersionId = null, ?bool $opcacheEnableCli = null)
-    {
-        $this->phpVersionId = $phpVersionId ?? PHP_VERSION_ID;
-
-        if (null !== $opcacheEnableCli) {
-            $this->opcacheEnableCli = $opcacheEnableCli;
-        } else {
-            $opcacheExt = extension_loaded('Zend OPcache');
-            $opcacheCli = ini_get('opcache.enable_cli');
-
-            $this->opcacheEnableCli = $opcacheExt
-                && false !== $opcacheCli
-                && ('1' === $opcacheCli || 'on' === strtolower($opcacheCli));
-        }
-    }
+    public function __construct(public readonly int $phpVersionId, public readonly bool $opcacheEnableCli) {}
 
     public function __toString(): string
     {
@@ -45,6 +28,18 @@ final class EnvBenchmark implements Stringable
         $release = $this->phpVersionId % 100;
 
         return sprintf('PHP runtime: %d.%d.%d , OPCache: %s', $major, $minor, $release, $opCache);
+    }
+
+    public static function fromCurrentEnv(): self
+    {
+        $opcacheEnableCli = false;
+
+        if (extension_loaded('Zend OPcache')) {
+            $opcacheCli = ini_get('opcache.enable_cli');
+            $opcacheEnableCli = false !== $opcacheCli && ('1' === $opcacheCli || 'on' === strtolower($opcacheCli));
+        }
+
+        return new self(PHP_VERSION_ID, $opcacheEnableCli);
     }
 
     public function toHash(): string

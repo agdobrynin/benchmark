@@ -16,6 +16,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use const PHP_VERSION_ID;
+
 /**
  * @internal
  */
@@ -34,7 +36,7 @@ class BenchmarkRunnerBenchmarkGroupTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->env = new EnvBenchmark();
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
     }
 
     protected function tearDown(): void
