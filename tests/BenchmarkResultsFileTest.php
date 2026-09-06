@@ -326,7 +326,7 @@ class BenchmarkResultsFileTest extends TestCase
                    }
                 }
             }',
-            'A package of version \'v1.0.0\' defined in env hash "hash-env-1234" must contain benchmark groups as a non-empty array',
+            'The package version \'v1.0.0\' defined in env hash "hash-env-1234" must contain benchmark groups as a non-empty array',
         ];
 
         yield 'group name is empty string' => [
@@ -347,7 +347,7 @@ class BenchmarkResultsFileTest extends TestCase
                    }
                 }
             }',
-            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" must contain benchmark groups as a non-empty array',
+            'The package version \'v1.0.0\' defined in env hash "hash-env-1234" must contain benchmark groups as a non-empty array',
         ];
 
         yield 'benchmark results is empty array' => [
@@ -364,7 +364,7 @@ class BenchmarkResultsFileTest extends TestCase
                    }
                 }
             }',
-            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' must contain benchmark results as a non-empty array',
+            'The package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' must contain benchmark results as a non-empty array',
         ];
 
         yield 'benchmark description is empty string' => [
@@ -383,7 +383,7 @@ class BenchmarkResultsFileTest extends TestCase
                    }
                 }
             }',
-            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' must contain a benchmark description as a non-empty string',
+            'The package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' must contain a benchmark description as a non-empty string',
         ];
 
         yield 'benchmark results as string' => [
@@ -402,7 +402,7 @@ class BenchmarkResultsFileTest extends TestCase
                    }
                 }
             }',
-            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' and benchmark \'bar\' must contain iteration elements as a non-empty array',
+            'The package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' and benchmark \'bar\' must contain iteration elements as a non-empty array',
         ];
 
         yield 'Empty benchmark metrics' => [
@@ -421,7 +421,7 @@ class BenchmarkResultsFileTest extends TestCase
                    }
                 }
             }',
-            'Package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' and benchmark \'bar\' must contain iteration elements as a non-empty array',
+            'The package version \'v1.0.0\' defined in env hash "hash-env-1234" with group name \'foo\' and benchmark \'bar\' must contain iteration elements as a non-empty array',
         ];
 
         yield 'Invalid benchmark metrics' => [

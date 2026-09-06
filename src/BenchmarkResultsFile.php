@@ -236,33 +236,33 @@ final class BenchmarkResultsFile
 
                 if (!is_array($groups) || 0 === count($groups)) {
                     throw new RuntimeException(
-                        sprintf('A package of version %s defined in env hash "%s" must contain benchmark groups as a non-empty array.', var_export($version, true), $envHash)
+                        sprintf('The package version %s defined in env hash "%s" must contain benchmark groups as a non-empty array.', var_export($version, true), $envHash)
                     );
                 }
 
                 foreach ($groups as $groupName => $benchmarkResults) {
                     if (!is_string($groupName) || '' === $groupName) {
                         throw new RuntimeException(
-                            sprintf('Package version %s defined in env hash "%s" must contain benchmark groups as a non-empty array where each group name is a non-empty string.', var_export($version, true), $envHash)
+                            sprintf('The package version %s defined in env hash "%s" must contain benchmark groups as a non-empty array where each group name is a non-empty string.', var_export($version, true), $envHash)
                         );
                     }
 
                     if (!is_array($benchmarkResults) || 0 === count($benchmarkResults)) {
                         throw new RuntimeException(
-                            sprintf('Package version %s defined in env hash "%s" with group name %s must contain benchmark results as a non-empty array.', var_export($version, true), $envHash, var_export($groupName, true))
+                            sprintf('The package version %s defined in env hash "%s" with group name %s must contain benchmark results as a non-empty array.', var_export($version, true), $envHash, var_export($groupName, true))
                         );
                     }
 
                     foreach ($benchmarkResults as $benchmarkDescription => $timeExecuteMemoryUsageIterationsItems) {
                         if (!is_string($benchmarkDescription) || '' === $benchmarkDescription) {
                             throw new RuntimeException(
-                                sprintf('Package version %s defined in env hash "%s" with group name %s must contain a benchmark description as a non-empty string.', var_export($version, true), $envHash, var_export($groupName, true))
+                                sprintf('The package version %s defined in env hash "%s" with group name %s must contain a benchmark description as a non-empty string.', var_export($version, true), $envHash, var_export($groupName, true))
                             );
                         }
 
                         if (!is_array($timeExecuteMemoryUsageIterationsItems) || 0 === count($timeExecuteMemoryUsageIterationsItems)) {
                             throw new RuntimeException(
-                                sprintf('Package version %s defined in env hash "%s" with group name %s and benchmark %s must contain iteration elements as a non-empty array.', var_export($version, true), $envHash, var_export($groupName, true), var_export($benchmarkDescription, true))
+                                sprintf('The package version %s defined in env hash "%s" with group name %s and benchmark %s must contain iteration elements as a non-empty array.', var_export($version, true), $envHash, var_export($groupName, true), var_export($benchmarkDescription, true))
                             );
                         }
 
@@ -272,7 +272,7 @@ final class BenchmarkResultsFile
                         foreach ($timeExecuteMemoryUsageIterationsItems as $timeExecuteMemoryUsageIteration) {
                             if (!is_array($timeExecuteMemoryUsageIteration) || 0 === count($timeExecuteMemoryUsageIteration)) {
                                 throw new RuntimeException(
-                                    sprintf('Package version %s defined in env hash "%s" with group name %s and benchmark %s must contain an array of iterations, where each element must be represented as a non-empty array with keys matching the public properties of class %s.', var_export($version, true), $envHash, var_export($groupName, true), var_export($benchmarkDescription, true), TimeExecuteMemoryUsageInIteration::class)
+                                    sprintf('The package version %s defined in env hash "%s" with group name %s and benchmark %s must contain an array of iterations, where each element must be represented as a non-empty array with keys matching the public properties of class %s.', var_export($version, true), $envHash, var_export($groupName, true), var_export($benchmarkDescription, true), TimeExecuteMemoryUsageInIteration::class)
                                 );
                             }
 
