@@ -10,10 +10,13 @@ use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+
+use const PHP_VERSION_ID;
 
 /**
  * @internal
@@ -25,8 +28,23 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(BenchmarkMethod::class)]
 #[UsesClass(Formatter::class)]
+#[UsesClass(EnvBenchmark::class)]
 class BenchmarkRunnerBenchmarkGroupTest extends TestCase
 {
+    protected EnvBenchmark $env;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->env);
+    }
+
     public function testBenchmarkRunnerGroup(): void
     {
         $classFoo = new #[Group('Foo description')] class() {
@@ -45,7 +63,7 @@ class BenchmarkRunnerBenchmarkGroupTest extends TestCase
             public function doNothingTwo(): void {}
         };
 
-        $runner = new BenchmarkRunner('v0.0.1', $classFoo, $classBar);
+        $runner = new BenchmarkRunner('v0.0.1', $this->env, $classFoo, $classBar);
 
         $runner->doBenchmarks();
 
@@ -65,7 +83,7 @@ class BenchmarkRunnerBenchmarkGroupTest extends TestCase
             public function doNothing(): void {}
         };
 
-        $runner = new BenchmarkRunner('v0.0.1', $class);
+        $runner = new BenchmarkRunner('v0.0.1', $this->env, $class);
 
         self::assertMatchesRegularExpression('/^class@anonymous.+BenchmarkRunnerBenchmarkGroupTest\.php/', $runner->benchmarkGroups[0]->name);
     }
@@ -79,7 +97,7 @@ class BenchmarkRunnerBenchmarkGroupTest extends TestCase
 
         $benchFoo = new BenchFoo();
 
-        $runner = new BenchmarkRunner('v0.0.1', $class, $benchFoo);
+        $runner = new BenchmarkRunner('v0.0.1', $this->env, $class, $benchFoo);
 
         self::assertCount(2, $runner->benchmarkGroups);
         self::assertMatchesRegularExpression('/^class@anonymous.+BenchmarkRunnerBenchmarkGroupTest\.php/', $runner->benchmarkGroups[0]->name);

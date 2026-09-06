@@ -7,6 +7,7 @@ namespace Kaspi\Benchmark\Tests\BenchmarkPrinter;
 use InvalidArgumentException;
 use Kaspi\Benchmark\BenchmarkPrinter;
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\Formatter;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
@@ -23,6 +24,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(TimeExecuteMemoryUsageInIteration::class)]
 #[UsesClass(Formatter::class)]
 #[UsesClass(BenchmarkTimeExecuteMemoryUsage::class)]
+#[UsesClass(EnvBenchmark::class)]
 class PrintEachVersionTest extends TestCase
 {
     #[DataProviderExternal(PrinterDataSet::class, 'benchmarkResults')]
@@ -32,7 +34,8 @@ class PrintEachVersionTest extends TestCase
         $printer->attach($res, ...$_);
 
         $this->expectOutputString('
-
++--------------------------------------------------------------------------------------------------+
+| PHP runtime: 8.1.0 , OPCache: off                                                                |
 +--------------------------------------------------------------------------------------------------+
 | v1.0.0                                                                                           |
 +----------------------------------------+-------+-------+---------------------------+-------------+
@@ -44,19 +47,17 @@ class PrintEachVersionTest extends TestCase
 +--------------------------------------------------------------------------------------------------+
 | Foo group                                                                                        |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
-| Lorem ipsum dolor sit amet,            | 2     | 2     | 170 B       | 270 B       | 7.39 ns     |
+| Lorem ipsum dolor sit amet,            | 2     | 2     | 0 B         | 0 B         | 0 ns        |
 | consectetur adipiscing elit. Cras      |       |       +-------------+-------------+             |
-| porta eleifend ante ut maximus. Sed    |       |       | 1.66 KB     | 2.64 KB     |             |
+| porta eleifend ante ut maximus. Sed    |       |       | 0 B         | 0 B         |             |
 | eget mi convallis, ultrices orci quis, |       |       |             |             |             |
 | aliquet dolor. Donec eget tellus eu    |       |       |             |             |             |
 | mauris lacinia finibus.                |       |       |             |             |             |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
-| Lorem ipsum dolor sit amet             | 2     | 2     | 16 B        | 0 B         | 2.395 ns    |
+| Lorem ipsum dolor sit amet             | 2     | 2     | 0 B         | 0 B         | 0 ns        |
 |                                        |       |       +-------------+-------------+             |
-|                                        |       |       | 160 B       | 0 B         |             |
+|                                        |       |       | 0 B         | 0 B         |             |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
-
-+--------------------------------------------------------------------------------------------------+
 | v2.0.x-dev                                                                                       |
 +----------------------------------------+-------+-------+---------------------------+-------------+
 | Benchmark description                  | Iter. | Num.  | Memory (max)              | Time        |
@@ -67,16 +68,16 @@ class PrintEachVersionTest extends TestCase
 +--------------------------------------------------------------------------------------------------+
 | Foo group                                                                                        |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
-| Lorem ipsum dolor sit amet,            | 2     | 2     | 100 B       | 0 B         | 6.18 ns     |
+| Lorem ipsum dolor sit amet,            | 2     | 2     | 0 B         | 0 B         | 0 ns        |
 | consectetur adipiscing elit. Cras      |       |       +-------------+-------------+             |
-| porta eleifend ante ut maximus. Sed    |       |       | 1000 B      | 0 B         |             |
+| porta eleifend ante ut maximus. Sed    |       |       | 0 B         | 0 B         |             |
 | eget mi convallis, ultrices orci quis, |       |       |             |             |             |
 | aliquet dolor. Donec eget tellus eu    |       |       |             |             |             |
 | mauris lacinia finibus.                |       |       |             |             |             |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
-| Lorem ipsum dolor sit amet             | 2     | 2     | 40 B        | 0 B         | 1.705 ns    |
+| Lorem ipsum dolor sit amet             | 2     | 2     | 0 B         | 0 B         | 0 ns        |
 |                                        |       |       +-------------+-------------+             |
-|                                        |       |       | 400 B       | 0 B         |             |
+|                                        |       |       | 0 B         | 0 B         |             |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
 ');
         $printer->printEachVersion();

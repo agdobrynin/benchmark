@@ -17,7 +17,7 @@ use function gc_disable;
  */
 #[CoversClass(BenchmarkMetricsCollector::class)]
 #[CoversClass(TimeExecuteMemoryUsageInIteration::class)]
-class TimeMemoryBenchmarkServiceTest extends TestCase
+class BenchmarkMetricsCollectorTest extends TestCase
 {
     public function testGcDisabled(): void
     {

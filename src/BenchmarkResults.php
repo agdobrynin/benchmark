@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kaspi\Benchmark;
 
 use Generator;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
 
@@ -27,6 +28,7 @@ final class BenchmarkResults
     public function __construct(
         public readonly string $packageVersion,
         public readonly string $groupName,
+        public readonly EnvBenchmark $env,
     ) {}
 
     /**

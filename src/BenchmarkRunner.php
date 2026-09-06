@@ -15,6 +15,7 @@ use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Services\BenchmarkMetricsCollector;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -53,6 +54,7 @@ final class BenchmarkRunner
      */
     public function __construct(
         public readonly string $packageVersion,
+        public readonly EnvBenchmark $env,
         object $benchmarkClass,
         object ...$_,
     ) {
@@ -90,7 +92,7 @@ final class BenchmarkRunner
                 );
             }
 
-            $benchmarkResults = new BenchmarkResults($this->packageVersion, $benchmarkGroup->name);
+            $benchmarkResults = new BenchmarkResults($this->packageVersion, $benchmarkGroup->name, $this->env);
 
             if ($this->showProgressBar) {
                 printf("\n\r%s [%s]\n\n", $this->packageVersion, $benchmarkGroup->name);
