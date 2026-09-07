@@ -171,6 +171,10 @@ final class BenchmarkRunner
         }
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     */
     private function configureBenchmarkGroup(object $benchmarkObject): BenchmarkGroup
     {
         $reflectionClass = new ReflectionClass($benchmarkObject);
