@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kaspi\Benchmark\DTO;
 
 use Kaspi\Benchmark\Attributes\Parameters;
+use Kaspi\Benchmark\Attributes\RequiresPhp;
 use ReflectionMethod;
 
 /**
@@ -30,5 +31,6 @@ final class BenchmarkMethod
         public readonly array $afterReflectionMethod = [],
         public readonly array $parameters = [],
         public readonly int $numberOfTimes = 1,
+        public readonly ?RequiresPhp $requiresPhp = null,
     ) {}
 }
