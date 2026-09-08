@@ -10,7 +10,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
-use const PHP_VERSION_ID;
+use function version_compare;
+
+use const PHP_VERSION;
 
 /**
  * @internal
@@ -19,24 +21,61 @@ use const PHP_VERSION_ID;
 class RequiresPhpTest extends TestCase
 {
     #[TestWith([
-        new RequiresPhp('8.1.0', '<'),
-        PHP_VERSION_ID < 80100,
+        '8.1.0',
+        '<',
+        'less than 8.1.0',
     ])]
     #[TestWith([
-        new RequiresPhp('8.1.34'),
-        PHP_VERSION_ID === 80134,
+        '8.1.0',
+        '<=',
+        'less than or equals 8.1.0',
     ])]
     #[TestWith([
-        new RequiresPhp('8.1', '>='),
-        PHP_VERSION_ID >= 80100,
+        '8.1.34',
+        null,
+        'equals 8.1.34',
     ])]
     #[TestWith([
-        new RequiresPhp('8.5', '>='),
-        PHP_VERSION_ID >= 80500,
+        '8.1.33',
+        'eq',
+        'equals 8.1.33',
     ])]
-    public function testRequiresPhp(RequiresPhp $attr, bool $expect): void
+    #[TestWith([
+        '8.1.33',
+        '=',
+        'equals 8.1.33',
+    ])]
+    #[TestWith([
+        '8.1.33',
+        '==',
+        'equals 8.1.33',
+    ])]
+    #[TestWith([
+        '8.2.33',
+        '>',
+        'greater than 8.2.33',
+    ])]
+    #[TestWith([
+        '8.1',
+        '>=',
+        'greater than or equals 8.1',
+    ])]
+    #[TestWith([
+        '8.0.2',
+        '!=',
+        'not equals 8.0.2',
+    ])]
+    #[TestWith([
+        '8.3',
+        '<>',
+        'not equals 8.3',
+    ])]
+    public function testRequiresPhp(string $version, ?string $operator, string $expectHumanReadable): void
     {
-        self::assertEquals($expect, $attr->isAvailable());
+        $attr = new RequiresPhp($version, $operator);
+        self::assertEquals($expectHumanReadable, $attr->humanReadable());
+        // Test not redefined constant \PHP_VERSION
+        self::assertEquals(version_compare(PHP_VERSION, $attr->phpVersion, $attr->operator), $attr->isAvailable());
     }
 
     #[TestWith([''])]
