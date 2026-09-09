@@ -13,6 +13,7 @@ use Kaspi\Benchmark\Attributes\Group;
 use Kaspi\Benchmark\Attributes\Iterations;
 use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
+use Kaspi\Benchmark\Attributes\RequiresPhp;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
 use Kaspi\Benchmark\DTO\EnvBenchmark;
@@ -99,6 +100,15 @@ final class BenchmarkRunner
             }
 
             foreach ($benchmarkGroup->benchmarkMethods as $benchmarkMethod) {
+                if (null !== $benchmarkMethod->requiresPhp
+                    && !$benchmarkMethod->requiresPhp->isAvailable()) {
+                    if ($this->showProgressBar) {
+                        printf("\rBenchmark %s requires PHP version %s\n", var_export($benchmarkMethod->description, true), $benchmarkMethod->requiresPhp->humanReadable());
+                    }
+
+                    continue;
+                }
+
                 $args = $this->benchmarkParameters($benchmarkMethod);
 
                 do {
@@ -149,10 +159,16 @@ final class BenchmarkRunner
                 echo "\n";
             }
 
-            yield $benchmarkResults;
+            if ($benchmarkResults->getResults()->valid()) {
+                yield $benchmarkResults;
+            }
         }
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     */
     private function configureBenchmarkGroup(object $benchmarkObject): BenchmarkGroup
     {
         $reflectionClass = new ReflectionClass($benchmarkObject);
@@ -223,6 +239,13 @@ final class BenchmarkRunner
         $numberOfTimesOnClass = isset($numberOfTimesOnClassAttributes[0])
             ? $numberOfTimesOnClassAttributes[0]->newInstance()->numberOfTimes
             : 1;
+
+        /** @var list<ReflectionAttribute<RequiresPhp>> $requiresPhpOnClassAttributes */
+        $requiresPhpOnClassAttributes = $reflectionClass->getAttributes(RequiresPhp::class);
+
+        $requiresPhpOnClass = isset($requiresPhpOnClassAttributes[0])
+            ? $this->buildRequiresPhp($requiresPhpOnClassAttributes[0], $reflectionClass->getName().'::class')
+            : null;
 
         /** @var array<string, BenchmarkMethod> $benchmarkMethods */
         $benchmarkMethods = [];
@@ -296,6 +319,12 @@ final class BenchmarkRunner
                 ? $numberOfTimesMethodAttributes[0]->newInstance()->numberOfTimes
                 : $numberOfTimesOnClass;
 
+            /** @var list<ReflectionAttribute<RequiresPhp>> $requiresPhpMethodAttributes */
+            $requiresPhpMethodAttributes = $reflectionMethod->getAttributes(RequiresPhp::class);
+            $requiresPhp = isset($requiresPhpMethodAttributes[0])
+                ? $this->buildRequiresPhp($requiresPhpMethodAttributes[0], $reflectionClass->getName().'::'.$reflectionMethod->getName().'()')
+                : $requiresPhpOnClass;
+
             $benchmarkMethods[] = new BenchmarkMethod(
                 $description,
                 $reflectionMethod,
@@ -305,6 +334,7 @@ final class BenchmarkRunner
                 $afterMethods,
                 $parameters,
                 $numberOfTimes,
+                $requiresPhp,
             );
         }
 
@@ -367,6 +397,23 @@ final class BenchmarkRunner
             throw new InvalidArgumentException(
                 sprintf('The attribute `%s` failed validation for the %s. Reason by: %s', Parameters::class, $onName, $error->getMessage()),
                 previous: $error,
+            );
+        }
+    }
+
+    /**
+     * @param ReflectionAttribute<RequiresPhp> $requiresPhpAttribute
+     *
+     * @throws InvalidArgumentException
+     */
+    private function buildRequiresPhp(ReflectionAttribute $requiresPhpAttribute, string $onName): RequiresPhp
+    {
+        try {
+            return $requiresPhpAttribute->newInstance();
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException(
+                sprintf('The attribute `%s` failed validation for the %s. Reason by: %s', RequiresPhp::class, $onName, $e->getMessage()),
+                previous: $e,
             );
         }
     }
