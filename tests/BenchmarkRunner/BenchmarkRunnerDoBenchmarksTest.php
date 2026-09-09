@@ -15,6 +15,7 @@ use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
 use Kaspi\Benchmark\Attributes\RequiresPhp;
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\BenchmarkResultsFile;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
@@ -22,6 +23,8 @@ use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\Formatter;
 use Kaspi\Benchmark\Services\BenchmarkMetricsCollector;
+use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
+use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -48,6 +51,8 @@ use const PHP_VERSION_ID;
 #[UsesClass(RequiresPhp::class)]
 #[UsesClass(Formatter::class)]
 #[UsesClass(EnvBenchmark::class)]
+#[UsesClass(BenchmarkResultsFile::class)]
+#[UsesClass(BenchmarkTimeExecuteMemoryUsage::class)]
 class BenchmarkRunnerDoBenchmarksTest extends TestCase
 {
     protected EnvBenchmark $env;
@@ -286,5 +291,72 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
             ->doBenchmarks()
             ->valid()
         ;
+    }
+
+    public function testRunner(): void
+    {
+        $classOne = new #[Iterations(8)] #[Group('Class One')] class {
+            #[Benchmark]
+            public function doBenchOne(): void {}
+        };
+
+        $classTwo = new #[Group('Class Two')] class {
+            #[Benchmark]
+            #[Iterations(3)]
+            public function doBenchOne(): void {}
+
+            #[Benchmark]
+            #[Iterations(5)]
+            public function doBenchTwo(): void {}
+        };
+
+        vfsStream::setup('var');
+        $runner = new BenchmarkRunner('v1.x-dev', $this->env, $classOne, $classTwo);
+        $runner->showProgressBar(false);
+
+        $benchResultsFileSaver = new BenchmarkResultsFile(vfsStream::url('var/results.json'));
+
+        foreach ($runner->doBenchmarks() as $result) {
+            $benchResultsFileSaver->attach($result);
+        }
+
+        $benchResultsFileSaver->save();
+
+        $benchResultsFileReader = new BenchmarkResultsFile(vfsStream::url('var/results.json'));
+
+        $results = $benchResultsFileReader->read();
+
+        /** @var BenchmarkResults $res1 */
+        $res1 = $results->current();
+
+        self::assertEquals('Class One', $res1->groupName);
+
+        $itemsRes1 = $res1->getBenchmarkTimeExecuteMemoryUsageItems();
+        self::assertEquals('Do bench one', $itemsRes1->key());
+        self::assertEquals(8, $itemsRes1->current()->iterations);
+
+        $itemsRes1->next();
+
+        self::assertFalse($itemsRes1->valid());
+
+        $results->next();
+
+        /** @var BenchmarkResults $res2 */
+        $res2 = $results->current();
+
+        self::assertEquals('Class Two', $res2->groupName);
+
+        $itemsRes2 = $res2->getBenchmarkTimeExecuteMemoryUsageItems();
+        self::assertEquals('Do bench one', $itemsRes2->key());
+        self::assertEquals(3, $itemsRes2->current()->iterations);
+
+        $itemsRes2->next();
+
+        self::assertEquals('Do bench two', $itemsRes2->key());
+        self::assertEquals(5, $itemsRes2->current()->iterations);
+
+        $itemsRes2->next();
+
+        self::assertFalse($itemsRes2->valid());
     }
 }
