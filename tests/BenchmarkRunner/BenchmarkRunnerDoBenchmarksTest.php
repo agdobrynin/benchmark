@@ -13,6 +13,7 @@ use Kaspi\Benchmark\Attributes\Group;
 use Kaspi\Benchmark\Attributes\Iterations;
 use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
+use Kaspi\Benchmark\Attributes\RequiresPhp;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
@@ -39,6 +40,7 @@ use RuntimeException;
 #[UsesClass(BeforeMethod::class)]
 #[UsesClass(Iterations::class)]
 #[UsesClass(NumberOfTimes::class)]
+#[UsesClass(RequiresPhp::class)]
 #[UsesClass(Formatter::class)]
 class BenchmarkRunnerDoBenchmarksTest extends TestCase
 {
@@ -240,5 +242,34 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
             ->doBenchmarks()
             ->valid()
         ;
+    }
+
+    public function testSkepBenchmarkWithRequiresPhp(): void
+    {
+        $classOne = new #[RequiresPhp('10')] class {
+            #[Benchmark]
+            public function doBenchOne(): void {}
+        };
+
+        $classTwo = new class {
+            #[Benchmark]
+            #[RequiresPhp('11')]
+            public function doBenchOne(): void {}
+
+            #[Benchmark]
+            public function doBenchTwo(): void {}
+        };
+
+        $runner = (new BenchmarkRunner('v1.x-dev', $classOne, $classTwo))
+            ->doBenchmarks()
+        ;
+
+        $this->expectOutputRegex("^\n\r/v1\\.x\\-dev \\[class@anonymous.+\n\nBenchmark 'Do bench one' require PHP version equals 10$/");
+        $runner->current();
+
+        $runner->next();
+
+        $this->expectOutputRegex("/Benchmark 'Do bench one' require PHP version equals 11\n\rDo bench two................................................ \\[=.+] 100%\n$/");
+        $runner->current();
     }
 }

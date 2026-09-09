@@ -9,7 +9,6 @@ use InvalidArgumentException;
 
 use function implode;
 use function in_array;
-use function rtrim;
 use function sprintf;
 use function trim;
 use function var_export;
@@ -39,7 +38,7 @@ final class RequiresPhp
         $this->phpVersion = trim($phpVersion);
 
         if ('' === $this->phpVersion) {
-            throw new InvalidArgumentException('Php version must be non-empty string');
+            throw new InvalidArgumentException('Php version must be non-empty string.');
         }
 
         if (null === $operator) {
@@ -54,7 +53,7 @@ final class RequiresPhp
 
         if (!in_array($this->operator, $requiredOperators, true)) {
             throw new InvalidArgumentException(
-                sprintf('Invalid comparison operator %s. Support operators: %s', var_export($this->operator, true), implode(', ', $requiredOperators))
+                sprintf('Invalid comparison operator %s. Support operators: %s.', var_export($this->operator, true), implode(', ', $requiredOperators))
             );
         }
     }
@@ -70,7 +69,7 @@ final class RequiresPhp
             default => 'equals',
         };
 
-        return rtrim(sprintf('%s %s', $condition, $this->phpVersion));
+        return sprintf('%s %s', $condition, $this->phpVersion);
     }
 
     public function isAvailable(): bool
