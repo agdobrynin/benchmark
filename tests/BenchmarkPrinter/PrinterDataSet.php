@@ -6,45 +6,30 @@ namespace Kaspi\Benchmark\Tests\BenchmarkPrinter;
 
 use Generator;
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 
 final class PrinterDataSet
 {
     public static function benchmarkResults(): Generator
     {
-        $resOne = new BenchmarkResults('v1.0.0', 'Foo group');
-        $resOne->attachIterations(
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus.',
-            [
-                new TimeExecuteMemoryUsageInIteration(100, 200, 0, 10.11, 20.45, 2),
-                new TimeExecuteMemoryUsageInIteration(200, 370, 270, 20.99, 40.21, 2),
-            ]
-        );
+        $iterFixtures = [
+            new TimeExecuteMemoryUsageInIteration(0, 0, 0, 0, 0, 0, 0, 0, 2),
+            new TimeExecuteMemoryUsageInIteration(0, 0, 0, 0, 0, 0, 0, 0, 2),
+        ];
 
-        $resOne->attachIterations(
-            'Lorem ipsum dolor sit amet',
-            [
-                new TimeExecuteMemoryUsageInIteration(270, 286, 0, 45.11, 49.45, 2),
-                new TimeExecuteMemoryUsageInIteration(280, 291, 0, 50.21, 55.45, 2),
-            ]
-        );
+        $benchDescriptionOne = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus. Sed eget mi convallis, ultrices orci quis, aliquet dolor. Donec eget tellus eu mauris lacinia finibus.';
+        $benchDescriptionTwo = 'Lorem ipsum dolor sit amet';
 
-        $resTwo = new BenchmarkResults('v2.0.x-dev', 'Foo group');
-        $resTwo->attachIterations(
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus.',
-            [
-                new TimeExecuteMemoryUsageInIteration(100, 200, 0, 10.11, 19.01, 2),
-                new TimeExecuteMemoryUsageInIteration(200, 200, 0, 20.99, 36.81, 2),
-            ]
-        );
+        $envOne = new EnvBenchmark(80100, false);
 
-        $resTwo->attachIterations(
-            'Lorem ipsum dolor sit amet',
-            [
-                new TimeExecuteMemoryUsageInIteration(200, 220, 0, 39.20, 43.11, 2),
-                new TimeExecuteMemoryUsageInIteration(220, 260, 0, 44.20, 47.11, 2),
-            ]
-        );
+        $resOne = new BenchmarkResults('v1.0.0', 'Foo group', $envOne);
+        $resOne->attachIterations($benchDescriptionOne, $iterFixtures);
+        $resOne->attachIterations($benchDescriptionTwo, $iterFixtures);
+
+        $resTwo = new BenchmarkResults('v2.0.x-dev', 'Foo group', $envOne);
+        $resTwo->attachIterations($benchDescriptionOne, $iterFixtures);
+        $resTwo->attachIterations($benchDescriptionTwo, $iterFixtures);
 
         yield [
             $resOne, $resTwo,

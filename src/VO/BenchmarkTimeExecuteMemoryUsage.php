@@ -16,14 +16,24 @@ use function sprintf;
 final class BenchmarkTimeExecuteMemoryUsage
 {
     /**
-     * Maximum memory usage (in bytes) across all iterations.
+     * Maximum memory usage (in bytes) across all iterations allocated to your code.
      */
     public readonly int $bytesUsage;
 
     /**
-     * Peak memory consumption (in bytes) during benchmark execution.
+     * Maximum memory usage (in bytes) across all iterations allocated from the operating system.
+     */
+    public readonly int $bytesUsageReal;
+
+    /**
+     * Peak memory consumption (in bytes) during benchmark execution allocated to your code.
      */
     public readonly int $bytesPeakUsage;
+
+    /**
+     * Peak memory consumption (in bytes) during benchmark execution allocated from the operating system.
+     */
+    public readonly int $bytesPeakUsageReal;
 
     /**
      * Average time per iteration in nanoseconds.
@@ -50,7 +60,7 @@ final class BenchmarkTimeExecuteMemoryUsage
         $iterations = count($timeExecuteMemoryUsageInIterations);
 
         if (0 === $iterations) {
-            $this->iterations = $this->numberOfTimes = $this->bytesUsage = $this->bytesPeakUsage = 0;
+            $this->iterations = $this->numberOfTimes = $this->bytesUsage = $this->bytesUsageReal = $this->bytesPeakUsage = $this->bytesPeakUsageReal = 0;
             $this->time = 0.0;
 
             return;
@@ -60,7 +70,7 @@ final class BenchmarkTimeExecuteMemoryUsage
         $this->iterations = $iterations;
         $this->numberOfTimes = $firstResult->numberOfTimes;
 
-        $maxMemoryUsageInIterations = $maxMemoryPeakUsageInIterations = 0;
+        $maxMemoryUsageInIterations = $maxMemoryUsageRealInIterations = $maxMemoryPeakUsageInIterations = $maxMemoryPeakUsageRealInIterations = 0;
         $time = 0.0;
 
         foreach ($timeExecuteMemoryUsageInIterations as $timeExecuteMemoryUsageInIteration) {
@@ -70,13 +80,17 @@ final class BenchmarkTimeExecuteMemoryUsage
                 );
             }
 
-            $time += ($timeExecuteMemoryUsageInIteration->endTimeInIteration - $timeExecuteMemoryUsageInIteration->startTimeInIteration) / $this->numberOfTimes;
-            $maxMemoryUsageInIterations = max($maxMemoryUsageInIterations, $timeExecuteMemoryUsageInIteration->endBytesUsageInIteration - $timeExecuteMemoryUsageInIteration->startBytesUsageInIteration);
+            $time += ($timeExecuteMemoryUsageInIteration->endTime - $timeExecuteMemoryUsageInIteration->startTime) / $this->numberOfTimes;
+            $maxMemoryUsageInIterations = max($maxMemoryUsageInIterations, $timeExecuteMemoryUsageInIteration->endBytesUsage - $timeExecuteMemoryUsageInIteration->startBytesUsage);
+            $maxMemoryUsageRealInIterations = max($maxMemoryUsageRealInIterations, $timeExecuteMemoryUsageInIteration->endBytesUsageReal - $timeExecuteMemoryUsageInIteration->startBytesUsageReal);
             $maxMemoryPeakUsageInIterations = max($maxMemoryPeakUsageInIterations, $timeExecuteMemoryUsageInIteration->bytesPeakUsage);
+            $maxMemoryPeakUsageRealInIterations = max($maxMemoryPeakUsageRealInIterations, $timeExecuteMemoryUsageInIteration->bytesPeakUsageReal);
         }
 
         $this->time = ($time / $this->iterations);
         $this->bytesUsage = $maxMemoryUsageInIterations;
+        $this->bytesUsageReal = $maxMemoryUsageRealInIterations;
         $this->bytesPeakUsage = $maxMemoryPeakUsageInIterations;
+        $this->bytesPeakUsageReal = $maxMemoryPeakUsageRealInIterations;
     }
 }

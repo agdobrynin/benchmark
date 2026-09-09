@@ -13,9 +13,11 @@ use Kaspi\Benchmark\Attributes\Group;
 use Kaspi\Benchmark\Attributes\Iterations;
 use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
+use Kaspi\Benchmark\Attributes\RequiresPhp;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
-use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
+use Kaspi\Benchmark\Services\BenchmarkMetricsCollector;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
@@ -23,16 +25,11 @@ use ReflectionMethod;
 use RuntimeException;
 use TypeError;
 
-use function gc_collect_cycles;
-use function gc_enable;
 use function get_debug_type;
-use function hrtime;
 use function is_array;
 use function is_callable;
 use function is_int;
 use function is_string;
-use function memory_get_peak_usage;
-use function memory_get_usage;
 use function printf;
 use function sprintf;
 use function str_replace;
@@ -58,11 +55,10 @@ final class BenchmarkRunner
      */
     public function __construct(
         public readonly string $packageVersion,
+        public readonly EnvBenchmark $env,
         object $benchmarkClass,
         object ...$_,
     ) {
-        gc_enable();
-
         $benchmarkGroups = [];
 
         foreach ([$benchmarkClass, ...$_] as $benchmarkObject) {
@@ -97,13 +93,22 @@ final class BenchmarkRunner
                 );
             }
 
-            $benchmarkResults = new BenchmarkResults($this->packageVersion, $benchmarkGroup->name);
+            $benchmarkResults = new BenchmarkResults($this->packageVersion, $benchmarkGroup->name, $this->env);
 
             if ($this->showProgressBar) {
                 printf("\n\r%s [%s]\n\n", $this->packageVersion, $benchmarkGroup->name);
             }
 
             foreach ($benchmarkGroup->benchmarkMethods as $benchmarkMethod) {
+                if (null !== $benchmarkMethod->requiresPhp
+                    && !$benchmarkMethod->requiresPhp->isAvailable()) {
+                    if ($this->showProgressBar) {
+                        printf("\rBenchmark %s requires PHP version %s\n", var_export($benchmarkMethod->description, true), $benchmarkMethod->requiresPhp->humanReadable());
+                    }
+
+                    continue;
+                }
+
                 $args = $this->benchmarkParameters($benchmarkMethod);
 
                 do {
@@ -119,37 +124,24 @@ final class BenchmarkRunner
                         $benchmarkDescription = $benchmarkMethod->description;
                     }
 
+                    $timeMemory = new BenchmarkMetricsCollector(true, $benchmarkMethod->numberOfTimes);
+
                     for ($i = 1; $i <= $benchmarkMethod->iterations; ++$i) {
                         if ($this->showProgressBar) {
                             Formatter::progressBar($benchmarkDescription, $i, $benchmarkMethod->iterations, sizeBar: 33);
                         }
 
-                        gc_collect_cycles();
-
-                        $startMemoryUsage = memory_get_usage();
-                        $startHrTime = hrtime(true);
+                        $timeMemory->start();
 
                         // Execute the target method
                         for ($n = 0; $n < $benchmarkMethod->numberOfTimes; ++$n) {
                             $benchmarkMethod->targetReflectionMethod->invokeArgs($benchmarkGroup->benchmarkObject, $benchmarkArgs);
                         }
 
-                        gc_collect_cycles();
-
-                        $timeMemory = new TimeExecuteMemoryUsageInIteration(
-                            $startMemoryUsage,
-                            memory_get_usage(),
-                            memory_get_peak_usage(),
-                            $startHrTime,
-                            hrtime(true),
-                            $benchmarkMethod->numberOfTimes,
-                        );
-
-                        $benchmarkResults->attachIteration(
-                            $benchmarkDescription,
-                            $timeMemory
-                        );
+                        $timeMemory->end();
                     }
+
+                    $benchmarkResults->attachIterations($benchmarkDescription, $timeMemory->iterations());
 
                     if ($this->showProgressBar) {
                         echo "\n";
@@ -167,10 +159,16 @@ final class BenchmarkRunner
                 echo "\n";
             }
 
-            yield $benchmarkResults;
+            if ($benchmarkResults->getResults()->valid()) {
+                yield $benchmarkResults;
+            }
         }
     }
 
+    /**
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     */
     private function configureBenchmarkGroup(object $benchmarkObject): BenchmarkGroup
     {
         $reflectionClass = new ReflectionClass($benchmarkObject);
@@ -241,6 +239,13 @@ final class BenchmarkRunner
         $numberOfTimesOnClass = isset($numberOfTimesOnClassAttributes[0])
             ? $numberOfTimesOnClassAttributes[0]->newInstance()->numberOfTimes
             : 1;
+
+        /** @var list<ReflectionAttribute<RequiresPhp>> $requiresPhpOnClassAttributes */
+        $requiresPhpOnClassAttributes = $reflectionClass->getAttributes(RequiresPhp::class);
+
+        $requiresPhpOnClass = isset($requiresPhpOnClassAttributes[0])
+            ? $this->buildRequiresPhp($requiresPhpOnClassAttributes[0], $reflectionClass->getName().'::class')
+            : null;
 
         /** @var array<string, BenchmarkMethod> $benchmarkMethods */
         $benchmarkMethods = [];
@@ -314,6 +319,12 @@ final class BenchmarkRunner
                 ? $numberOfTimesMethodAttributes[0]->newInstance()->numberOfTimes
                 : $numberOfTimesOnClass;
 
+            /** @var list<ReflectionAttribute<RequiresPhp>> $requiresPhpMethodAttributes */
+            $requiresPhpMethodAttributes = $reflectionMethod->getAttributes(RequiresPhp::class);
+            $requiresPhp = isset($requiresPhpMethodAttributes[0])
+                ? $this->buildRequiresPhp($requiresPhpMethodAttributes[0], $reflectionClass->getName().'::'.$reflectionMethod->getName().'()')
+                : $requiresPhpOnClass;
+
             $benchmarkMethods[] = new BenchmarkMethod(
                 $description,
                 $reflectionMethod,
@@ -323,6 +334,7 @@ final class BenchmarkRunner
                 $afterMethods,
                 $parameters,
                 $numberOfTimes,
+                $requiresPhp,
             );
         }
 
@@ -385,6 +397,23 @@ final class BenchmarkRunner
             throw new InvalidArgumentException(
                 sprintf('The attribute `%s` failed validation for the %s. Reason by: %s', Parameters::class, $onName, $error->getMessage()),
                 previous: $error,
+            );
+        }
+    }
+
+    /**
+     * @param ReflectionAttribute<RequiresPhp> $requiresPhpAttribute
+     *
+     * @throws InvalidArgumentException
+     */
+    private function buildRequiresPhp(ReflectionAttribute $requiresPhpAttribute, string $onName): RequiresPhp
+    {
+        try {
+            return $requiresPhpAttribute->newInstance();
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException(
+                sprintf('The attribute `%s` failed validation for the %s. Reason by: %s', RequiresPhp::class, $onName, $e->getMessage()),
+                previous: $e,
             );
         }
     }

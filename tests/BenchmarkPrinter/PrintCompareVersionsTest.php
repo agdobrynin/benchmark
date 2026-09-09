@@ -32,21 +32,33 @@ class PrintCompareVersionsTest extends TestCase
         $printer->attach($res, ...$_);
 
         $this->expectOutputString('
++----------------------------------------------------------------------------------------------------+
+| PHP runtime: 8.1.0 , OPCache: off                                                                  |
 +--------------------------------+---------+-------+-------+---------------------------+-------------+
-| Benchmarks group               | Package | Iter. | Num.  | Memory                    | Time        |
+| Benchmarks group               | Package | Iter. | Num.  | Memory (max)              | Time        |
 |  ↘️  Benchmark description     | version |       | of    +-------------+-------------+ execution   |
-|                                |         |       | times | Usage       | Peak usage  | per iterate |
+|                                |         |       | times | Usage code  | Peak code   | per iterate |
+|                                |         |       |       +-------------+-------------+             |
+|                                |         |       |       | Usage real  | Peak real   |             |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 | Foo group                                                                                          |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
-|    Lorem ipsum dolor sit amet, |  v1.0.0 | 2     | 2     | 170 B       | 270 B       | 7.39 ns     |
-|   consectetur adipiscing elit. +---------+-------+-------+-------------+-------------+-------------+
-|    Cras porta eleifend ante ut | v2.0.x… | 2     | 2     | 100 B       | 0 B         | 6.18 ns     |
-|                       maximus. |         |       |       |             |             |             |
+|    Lorem ipsum dolor sit amet, |  v1.0.0 | 2     | 2     | 0 B         | 0 B         | 0 ns        |
+|   consectetur adipiscing elit. |         |       |       +-------------+-------------+             |
+|    Cras porta eleifend ante ut |         |       |       | 0 B         | 0 B         |             |
+|           maximus. Sed eget mi +---------+-------+-------+-------------+-------------+-------------+
+| convallis, ultrices orci quis, | v2.0.x… | 2     | 2     | 0 B         | 0 B         | 0 ns        |
+|      aliquet dolor. Donec eget |         |       |       +-------------+-------------+             |
+|       tellus eu mauris lacinia |         |       |       | 0 B         | 0 B         |             |
+|                       finibus. |         |       |       |             |             |             |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
-|     Lorem ipsum dolor sit amet |  v1.0.0 | 2     | 2     | 16 B        | 0 B         | 2.395 ns    |
+|     Lorem ipsum dolor sit amet |  v1.0.0 | 2     | 2     | 0 B         | 0 B         | 0 ns        |
+|                                |         |       |       +-------------+-------------+             |
+|                                |         |       |       | 0 B         | 0 B         |             |
 |                                +---------+-------+-------+-------------+-------------+-------------+
-|                                | v2.0.x… | 2     | 2     | 40 B        | 0 B         | 1.705 ns    |
+|                                | v2.0.x… | 2     | 2     | 0 B         | 0 B         | 0 ns        |
+|                                |         |       |       +-------------+-------------+             |
+|                                |         |       |       | 0 B         | 0 B         |             |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 ');
         $printer->printCompareVersions();

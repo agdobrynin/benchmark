@@ -13,21 +13,27 @@ use Kaspi\Benchmark\Attributes\Group;
 use Kaspi\Benchmark\Attributes\Iterations;
 use Kaspi\Benchmark\Attributes\NumberOfTimes;
 use Kaspi\Benchmark\Attributes\Parameters;
+use Kaspi\Benchmark\Attributes\RequiresPhp;
 use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\Formatter;
+use Kaspi\Benchmark\Services\BenchmarkMetricsCollector;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
+use const PHP_VERSION_ID;
+
 /**
  * @internal
  */
 #[CoversClass(BenchmarkRunner::class)]
+#[UsesClass(BenchmarkMetricsCollector::class)]
 #[UsesClass(Group::class)]
 #[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(BenchmarkResults::class)]
@@ -39,9 +45,25 @@ use RuntimeException;
 #[UsesClass(BeforeMethod::class)]
 #[UsesClass(Iterations::class)]
 #[UsesClass(NumberOfTimes::class)]
+#[UsesClass(RequiresPhp::class)]
 #[UsesClass(Formatter::class)]
+#[UsesClass(EnvBenchmark::class)]
 class BenchmarkRunnerDoBenchmarksTest extends TestCase
 {
+    protected EnvBenchmark $env;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->env);
+    }
+
     public function testRunBenchmarkInvalidParametersReturnType(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -58,7 +80,7 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
             }
         };
 
-        (new BenchmarkRunner('foo', $class))
+        (new BenchmarkRunner('foo', $this->env, $class))
             ->showProgressBar(false)
             ->doBenchmarks()
             ->valid()
@@ -83,7 +105,7 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
             }
         };
 
-        (new BenchmarkRunner('foo', $class))
+        (new BenchmarkRunner('foo', $this->env, $class))
             ->showProgressBar(false)
             ->doBenchmarks()
             ->valid()
@@ -108,7 +130,7 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
             }
         };
 
-        (new BenchmarkRunner('foo', $class))
+        (new BenchmarkRunner('foo', $this->env, $class))
             ->showProgressBar(false)
             ->doBenchmarks()
             ->valid()
@@ -131,7 +153,7 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
             }
         };
 
-        (new BenchmarkRunner('foo', $class))
+        (new BenchmarkRunner('foo', $this->env, $class))
             ->showProgressBar(false)
             ->doBenchmarks()
             ->valid()
@@ -155,7 +177,7 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
             }
         };
 
-        $benchResults = (new BenchmarkRunner('foo', $class))
+        $benchResults = (new BenchmarkRunner('foo', $this->env, $class))
             ->showProgressBar(false)
             ->doBenchmarks()
         ;
@@ -202,7 +224,7 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
             }
         };
 
-        (new BenchmarkRunner('foo', $class))
+        (new BenchmarkRunner('foo', $this->env, $class))
             ->showProgressBar(false)
             ->doBenchmarks()
             ->current()
@@ -225,7 +247,7 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
 
         $this->expectOutputRegex('/\n\rv1\.x-dev \[Foo group\]\n\n\rdo nothing one\..+ \[([=]+)\] 100%\n\rdo nothing two\..+ \[([=]+)\] 100%/');
 
-        (new BenchmarkRunner('v1.x-dev', $class))
+        (new BenchmarkRunner('v1.x-dev', $this->env, $class))
             ->doBenchmarks()
             ->current()
         ;
@@ -236,7 +258,31 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Benchmark methods not found in the class');
 
-        (new BenchmarkRunner('foo', new class {}))
+        (new BenchmarkRunner('foo', $this->env, new class {}))
+            ->doBenchmarks()
+            ->valid()
+        ;
+    }
+
+    public function testSkepBenchmarkWithRequiresPhp(): void
+    {
+        $classOne = new #[RequiresPhp('20')] class {
+            #[Benchmark]
+            public function doBenchOne(): void {}
+        };
+
+        $classTwo = new class {
+            #[Benchmark]
+            #[RequiresPhp('22', '>=')]
+            public function doBenchOne(): void {}
+
+            #[Benchmark]
+            public function doBenchTwo(): void {}
+        };
+
+        $this->expectOutputRegex('/(requires PHP version equals 20).*(requires PHP version greater than or equals 22)/sui');
+
+        (new BenchmarkRunner('v1.x-dev', $classOne, $classTwo))
             ->doBenchmarks()
             ->valid()
         ;

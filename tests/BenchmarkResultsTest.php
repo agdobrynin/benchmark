@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Kaspi\Benchmark\Tests;
 
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -13,12 +14,15 @@ use PHPUnit\Framework\TestCase;
 
 use function round;
 
+use const PHP_VERSION_ID;
+
 /**
  * @internal
  */
 #[CoversClass(BenchmarkResults::class)]
 #[CoversClass(BenchmarkTimeExecuteMemoryUsage::class)]
 #[UsesClass(TimeExecuteMemoryUsageInIteration::class)]
+#[UsesClass(EnvBenchmark::class)]
 class BenchmarkResultsTest extends TestCase
 {
     protected BenchmarkResults $results;
@@ -26,7 +30,7 @@ class BenchmarkResultsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->results = new BenchmarkResults('0.0.1', 'Foo');
+        $this->results = new BenchmarkResults('0.0.1', 'Foo', new EnvBenchmark(PHP_VERSION_ID, false));
     }
 
     protected function tearDown(): void
@@ -39,7 +43,7 @@ class BenchmarkResultsTest extends TestCase
     {
         $this->results->attachIteration(
             'Bar',
-            new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2)
+            new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2)
         );
 
         self::assertTrue($this->results->getResults()->valid());
@@ -58,11 +62,11 @@ class BenchmarkResultsTest extends TestCase
         // do attach item
         $this->results->attachIteration(
             'Bar',
-            new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2)
+            new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2)
         );
         $this->results->attachIteration(
             'Bar',
-            new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2)
+            new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2)
         );
 
         $iterations = $this->results->getResults();
@@ -101,8 +105,8 @@ class BenchmarkResultsTest extends TestCase
         $this->results->attachIterations(
             'Bar',
             [
-                new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2),
-                new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2),
+                new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2),
+                new TimeExecuteMemoryUsageInIteration(1, 10, 2, 20, 2, 20, 10.22, 10.99, 2),
             ]
         );
 
@@ -141,8 +145,8 @@ class BenchmarkResultsTest extends TestCase
         $this->results->attachIterations(
             'Bar',
             [
-                new TimeExecuteMemoryUsageInIteration(1, 2, 2, 10.22, 10.99, 2),
-                new TimeExecuteMemoryUsageInIteration(2, 3, 3, 11.99, 12.05, 2),
+                new TimeExecuteMemoryUsageInIteration(1, 1000, 2, 2000, 2, 2000, 10.22, 10.99, 2),
+                new TimeExecuteMemoryUsageInIteration(2, 2000, 3, 3000, 3, 3000, 11.99, 12.05, 2),
             ]
         );
 

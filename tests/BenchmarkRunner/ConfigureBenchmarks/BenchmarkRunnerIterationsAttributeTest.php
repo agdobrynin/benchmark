@@ -10,10 +10,13 @@ use Kaspi\Benchmark\BenchmarkResults;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+
+use const PHP_VERSION_ID;
 
 /**
  * @internal
@@ -25,8 +28,23 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(BenchmarkResults::class)]
 #[UsesClass(Formatter::class)]
+#[UsesClass(EnvBenchmark::class)]
 class BenchmarkRunnerIterationsAttributeTest extends TestCase
 {
+    protected EnvBenchmark $env;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->env);
+    }
+
     public function testIterationsNotDefined(): void
     {
         $class = new class {
@@ -34,7 +52,7 @@ class BenchmarkRunnerIterationsAttributeTest extends TestCase
             public function doBench(): void {}
         };
 
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertCount(1, $runner->benchmarkGroups);
 
@@ -51,7 +69,7 @@ class BenchmarkRunnerIterationsAttributeTest extends TestCase
             public function doBench(): void {}
         };
 
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertCount(1, $runner->benchmarkGroups);
         self::assertCount(1, $runner->benchmarkGroups[0]->benchmarkMethods);
@@ -65,7 +83,7 @@ class BenchmarkRunnerIterationsAttributeTest extends TestCase
             public function doBench(): void {}
         };
 
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertCount(1, $runner->benchmarkGroups);
 
@@ -86,7 +104,7 @@ class BenchmarkRunnerIterationsAttributeTest extends TestCase
             public function doBenchTwo(): void {}
         };
 
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertCount(1, $runner->benchmarkGroups);
 
@@ -105,7 +123,7 @@ class BenchmarkRunnerIterationsAttributeTest extends TestCase
             public function doBenchmark(): void {}
         };
 
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertCount(1, $runner->benchmarkGroups);
 
