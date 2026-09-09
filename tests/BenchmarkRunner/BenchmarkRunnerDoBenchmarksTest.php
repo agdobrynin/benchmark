@@ -246,30 +246,25 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
 
     public function testSkepBenchmarkWithRequiresPhp(): void
     {
-        $classOne = new #[RequiresPhp('10')] class {
+        $classOne = new #[RequiresPhp('20')] class {
             #[Benchmark]
             public function doBenchOne(): void {}
         };
 
         $classTwo = new class {
             #[Benchmark]
-            #[RequiresPhp('11')]
+            #[RequiresPhp('22', '>=')]
             public function doBenchOne(): void {}
 
             #[Benchmark]
             public function doBenchTwo(): void {}
         };
 
-        $runner = (new BenchmarkRunner('v1.x-dev', $classOne, $classTwo))
+        $this->expectOutputRegex('/(requires PHP version equals 20).*(requires PHP version greater than or equals 22)/sui');
+
+        (new BenchmarkRunner('v1.x-dev', $classOne, $classTwo))
             ->doBenchmarks()
+            ->valid()
         ;
-
-        $this->expectOutputRegex("^\n\r/v1\\.x\\-dev \\[class@anonymous.+\n\nBenchmark 'Do bench one' require PHP version equals 10$/");
-        $runner->current();
-
-        $runner->next();
-
-        $this->expectOutputRegex("/Benchmark 'Do bench one' require PHP version equals 11\n\rDo bench two................................................ \\[=.+] 100%\n$/");
-        $runner->current();
     }
 }

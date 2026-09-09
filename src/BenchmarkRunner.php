@@ -108,7 +108,7 @@ final class BenchmarkRunner
                 if (null !== $benchmarkMethod->requiresPhp
                     && !$benchmarkMethod->requiresPhp->isAvailable()) {
                     if ($this->showProgressBar) {
-                        printf("Benchmark %s requires PHP version %s\n", var_export($benchmarkMethod->description, true), $benchmarkMethod->requiresPhp->humanReadable());
+                        printf("\rBenchmark %s requires PHP version %s\n", var_export($benchmarkMethod->description, true), $benchmarkMethod->requiresPhp->humanReadable());
                     }
 
                     continue;
@@ -177,7 +177,9 @@ final class BenchmarkRunner
                 echo "\n";
             }
 
-            yield $benchmarkResults;
+            if ($benchmarkResults->getResults()->valid()) {
+                yield $benchmarkResults;
+            }
         }
     }
 
