@@ -47,17 +47,17 @@ final class BenchmarkPrinter
         $this->collectionIsEmpty();
 
         $formatResult = "\n| %-38s | %-5s | %-5s | %-11s | %-11s | %-11s |";
-        $formatResultMemRealSeparator = "\n| %-38s |%-7s|%-7s+%'-13s+%'-13s+%-13s|";
+        $formatResultMemRealTimeMaxSeparator = "\n| %-38s |%-7s|%-7s+%'-13s+%'-13s+%'-13s+";
         $formatTableLineSeparator = "\n+%'-40s+%'-7s+%'-7s+%'-13s+%'-13s+%'-13s+";
 
         $tableHead = <<< 'TABLEHEAD'
 
 +----------------------------------------+-------+-------+---------------------------+-------------+
-| Benchmark description                  | Iter. | Num.  | Memory (max)              | Time        |
-|                                        |       | of    +-------------+-------------+ execution   |
-|                                        |       | times | Usage code  | Peak code   | per iterate |
-|                                        |       |       +-------------+-------------+             |
-|                                        |       |       | Usage real  | Peak real   |             |
+| Benchmark description                  | Iter. | Num.  | Memory (max)              | Time exec.  |
+|                                        |       | of    +-------------+-------------+-------------+
+|                                        |       | times | Usage code  | Peak code   | Avg iterate |
+|                                        |       |       +-------------+-------------+-------------+
+|                                        |       |       | Usage real  | Peak real   | Max iterate |
 TABLEHEAD;
 
         $currentPackageVersion = $currentEnvHash = null;
@@ -98,9 +98,9 @@ TABLEHEAD;
                         $benchmarkTimeExecuteMemoryUsage->numberOfTimes,
                         Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesUsage),
                         Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesPeakUsage),
-                        Formatter::formatTimeExecute($benchmarkTimeExecuteMemoryUsage->time, 4),
+                        Formatter::formatTimeExecute($benchmarkTimeExecuteMemoryUsage->timeAvg, 4),
                     );
-                    printf($formatResultMemRealSeparator, $description[1] ?? '', '', '', '', '', '');
+                    printf($formatResultMemRealTimeMaxSeparator, $description[1] ?? '', '', '', '', '', '');
                     printf(
                         $formatResult,
                         $description[2] ?? '',
@@ -108,7 +108,7 @@ TABLEHEAD;
                         '',
                         Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesUsageReal),
                         Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesPeakUsageReal),
-                        '',
+                        Formatter::formatTimeExecute($benchmarkTimeExecuteMemoryUsage->timeMax, 4),
                     );
 
                     for ($i = 3, $c = count($description); $i < $c; ++$i) {
@@ -144,7 +144,7 @@ TABLEHEAD;
 
         $formatGroup = "\n| %-98s |";
         $formatResult = "\n| %30s | %7s | %-5s | %-5s | %-11s | %-11s | %-11s |";
-        $formatResultMemRealSeparator = "\n| %30s |%-9s|%-7s|%-7s+%'-13s+%'-13s+%-13s|";
+        $formatResultMemRealTimeMaxSeparator = "\n| %30s |%-9s|%-7s|%-7s+%'-13s+%'-13s+%'-13s+";
         $formatDivResult = "\n| %30s +%'-9s+%'-7s+%'-7s+%'-13s+%'-13s+%'-13s+";
         $formatLineDescription = "\n| %30s |%-9s|%-7s|%-7s|%-13s|%-13s|%-13s|";
         $formatLineBound = "\n+%'-32s+%'-9s+%'-7s+%'-7s+%'-13s+%'-13s+%'-13s+";
@@ -152,11 +152,11 @@ TABLEHEAD;
         $tableHeader = <<< 'TABLEHEAD'
 
 +--------------------------------+---------+-------+-------+---------------------------+-------------+
-| Benchmarks group               | Package | Iter. | Num.  | Memory (max)              | Time        |
-|  ↘️  Benchmark description     | version |       | of    +-------------+-------------+ execution   |
-|                                |         |       | times | Usage code  | Peak code   | per iterate |
-|                                |         |       |       +-------------+-------------+             |
-|                                |         |       |       | Usage real  | Peak real   |             |
+| Benchmarks group               | Package | Iter. | Num.  | Memory (max)              | Time exec.  |
+|  ↘️  Benchmark description     | version |       | of    +-------------+-------------+-------------+
+|                                |         |       | times | Usage code  | Peak code   | Avg iterate |
+|                                |         |       |       +-------------+-------------+-------------+
+|                                |         |       |       | Usage real  | Peak real   | Max iterate |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 TABLEHEAD;
 
@@ -202,11 +202,11 @@ TABLEHEAD;
                             $benchmarkTimeExecuteMemoryUsage->numberOfTimes,
                             Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesUsage),
                             Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesPeakUsage),
-                            Formatter::formatTimeExecute($benchmarkTimeExecuteMemoryUsage->time, 4),
+                            Formatter::formatTimeExecute($benchmarkTimeExecuteMemoryUsage->timeAvg, 4),
                         );
 
                         $descriptionWrapLine = array_shift($descriptionWrap);
-                        printf($formatResultMemRealSeparator, $descriptionWrapLine, '', '', '', '', '', '');
+                        printf($formatResultMemRealTimeMaxSeparator, $descriptionWrapLine, '', '', '', '', '', '');
 
                         $descriptionWrapLine = array_shift($descriptionWrap);
                         printf(
@@ -217,7 +217,7 @@ TABLEHEAD;
                             '',
                             Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesUsageReal),
                             Formatter::formatBytes($benchmarkTimeExecuteMemoryUsage->bytesPeakUsageReal),
-                            '',
+                            Formatter::formatTimeExecute($benchmarkTimeExecuteMemoryUsage->timeMax, 4),
                         );
 
                         if ($lastPackageVersion !== $packageVersion) {

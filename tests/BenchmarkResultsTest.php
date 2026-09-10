@@ -162,7 +162,8 @@ class BenchmarkResultsTest extends TestCase
         self::assertEquals(2, $total->numberOfTimes);
         self::assertEquals(1, $total->bytesUsage);
         self::assertEquals(3, $total->bytesPeakUsage);
-        self::assertEquals(0.2075, round($total->time, 4));
+        self::assertEquals(0.2075, round($total->timeAvg, 4));
+        self::assertEquals(0.385, round($total->timeMax, 4));
 
         // test cached data
         self::assertSame(

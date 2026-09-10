@@ -40,45 +40,45 @@ class PrintEachVersionTest extends TestCase
 +--------------------------------------------------------------------------------------------------+
 | v1.0.0                                                                                           |
 +----------------------------------------+-------+-------+---------------------------+-------------+
-| Benchmark description                  | Iter. | Num.  | Memory (max)              | Time        |
-|                                        |       | of    +-------------+-------------+ execution   |
-|                                        |       | times | Usage code  | Peak code   | per iterate |
-|                                        |       |       +-------------+-------------+             |
-|                                        |       |       | Usage real  | Peak real   |             |
+| Benchmark description                  | Iter. | Num.  | Memory (max)              | Time exec.  |
+|                                        |       | of    +-------------+-------------+-------------+
+|                                        |       | times | Usage code  | Peak code   | Avg iterate |
+|                                        |       |       +-------------+-------------+-------------+
+|                                        |       |       | Usage real  | Peak real   | Max iterate |
 +--------------------------------------------------------------------------------------------------+
 | Foo group                                                                                        |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
 | Lorem ipsum dolor sit amet,            | 2     | 2     | 0 B         | 0 B         | 0 ns        |
-| consectetur adipiscing elit. Cras      |       |       +-------------+-------------+             |
-| porta eleifend ante ut maximus. Sed    |       |       | 0 B         | 0 B         |             |
+| consectetur adipiscing elit. Cras      |       |       +-------------+-------------+-------------+
+| porta eleifend ante ut maximus. Sed    |       |       | 0 B         | 0 B         | 0 ns        |
 | eget mi convallis, ultrices orci quis, |       |       |             |             |             |
 | aliquet dolor. Donec eget tellus eu    |       |       |             |             |             |
 | mauris lacinia finibus.                |       |       |             |             |             |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
 | Lorem ipsum dolor sit amet             | 2     | 2     | 0 B         | 0 B         | 0 ns        |
-|                                        |       |       +-------------+-------------+             |
-|                                        |       |       | 0 B         | 0 B         |             |
+|                                        |       |       +-------------+-------------+-------------+
+|                                        |       |       | 0 B         | 0 B         | 0 ns        |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
 | v2.0.x-dev                                                                                       |
 +----------------------------------------+-------+-------+---------------------------+-------------+
-| Benchmark description                  | Iter. | Num.  | Memory (max)              | Time        |
-|                                        |       | of    +-------------+-------------+ execution   |
-|                                        |       | times | Usage code  | Peak code   | per iterate |
-|                                        |       |       +-------------+-------------+             |
-|                                        |       |       | Usage real  | Peak real   |             |
+| Benchmark description                  | Iter. | Num.  | Memory (max)              | Time exec.  |
+|                                        |       | of    +-------------+-------------+-------------+
+|                                        |       | times | Usage code  | Peak code   | Avg iterate |
+|                                        |       |       +-------------+-------------+-------------+
+|                                        |       |       | Usage real  | Peak real   | Max iterate |
 +--------------------------------------------------------------------------------------------------+
 | Foo group                                                                                        |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
 | Lorem ipsum dolor sit amet,            | 2     | 2     | 0 B         | 0 B         | 0 ns        |
-| consectetur adipiscing elit. Cras      |       |       +-------------+-------------+             |
-| porta eleifend ante ut maximus. Sed    |       |       | 0 B         | 0 B         |             |
+| consectetur adipiscing elit. Cras      |       |       +-------------+-------------+-------------+
+| porta eleifend ante ut maximus. Sed    |       |       | 0 B         | 0 B         | 0 ns        |
 | eget mi convallis, ultrices orci quis, |       |       |             |             |             |
 | aliquet dolor. Donec eget tellus eu    |       |       |             |             |             |
 | mauris lacinia finibus.                |       |       |             |             |             |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
 | Lorem ipsum dolor sit amet             | 2     | 2     | 0 B         | 0 B         | 0 ns        |
-|                                        |       |       +-------------+-------------+             |
-|                                        |       |       | 0 B         | 0 B         |             |
+|                                        |       |       +-------------+-------------+-------------+
+|                                        |       |       | 0 B         | 0 B         | 0 ns        |
 +----------------------------------------+-------+-------+-------------+-------------+-------------+
 ');
         $printer->printEachVersion();
