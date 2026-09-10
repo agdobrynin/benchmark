@@ -40,7 +40,7 @@ class BenchmarkRunSaveAndReadResultsTests extends TestCase
 
         vfsStream::setup('var');
         $resultsFile = vfsStream::url('var/results.json');
-        $env = new EnvBenchmark(PHP_VERSION_ID, false);
+        $env = new EnvBenchmark(PHP_VERSION_ID, false, 'linux');
 
         $runner = new BenchmarkRunner('v1.x-dev', $env, $classOne, $classTwo);
         $runner->showProgressBar(false);

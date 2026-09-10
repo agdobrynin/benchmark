@@ -36,7 +36,8 @@ class BenchmarkResultsFileTest extends TestCase
     "%hash-env%": {
         "env": {
             "phpVersionId": 80100,
-            "opcacheEnableCli": false
+            "opcacheEnableCli": false,
+            "operatingSystem": "linux"
         },
         "packageVersion": {
             "foo": {
@@ -67,7 +68,7 @@ class BenchmarkResultsFileTest extends TestCase
         parent::setUp();
         vfsStream::setup();
         $this->outputFile = vfsStream::url('root/output.json');
-        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false, 'linux');
     }
 
     protected function tearDown(): void
@@ -110,8 +111,7 @@ class BenchmarkResultsFileTest extends TestCase
 
     public function testSaveResultsWithReplaceBenchmark(): void
     {
-        $env = new EnvBenchmark(80100, false);
-        $json = str_replace('%hash-env%', $env->toHash(), self::jsonExist);
+        $json = str_replace('%hash-env%', $this->env->toHash(), self::jsonExist);
         file_put_contents($this->outputFile, $json);
 
         $file = new BenchmarkResultsFile($this->outputFile);
@@ -160,7 +160,7 @@ class BenchmarkResultsFileTest extends TestCase
 
         self::assertFalse($iterations->valid());
 
-        $resSet = new BenchmarkResults('foo', 'bar', $env);
+        $resSet = new BenchmarkResults('foo', 'bar', $this->env);
         $resSet->attachIterations(
             'baz',
             [
@@ -215,6 +215,10 @@ class BenchmarkResultsFileTest extends TestCase
         self::assertEquals(24.222, $current->startTime);
         self::assertEquals(25.432, $current->endTime);
         self::assertEquals(2, $current->numberOfTimes);
+
+        $items->next();
+
+        self::assertFalse($items->valid());
     }
 
     public function testReset(): void
