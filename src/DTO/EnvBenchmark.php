@@ -11,6 +11,7 @@ use function implode;
 use function ini_get;
 use function intdiv;
 use function md5;
+use function php_uname;
 use function sprintf;
 use function strtolower;
 
@@ -18,7 +19,14 @@ use const PHP_VERSION_ID;
 
 final class EnvBenchmark implements Stringable
 {
-    public function __construct(public readonly int $phpVersionId, public readonly bool $opcacheEnableCli) {}
+    /**
+     * @param non-empty-string $operatingSystem
+     */
+    public function __construct(
+        public readonly int $phpVersionId,
+        public readonly bool $opcacheEnableCli,
+        public readonly string $operatingSystem,
+    ) {}
 
     public function __toString(): string
     {
@@ -27,7 +35,7 @@ final class EnvBenchmark implements Stringable
         $minor = intdiv($this->phpVersionId % 10_000, 100);
         $release = $this->phpVersionId % 100;
 
-        return sprintf('PHP runtime: %d.%d.%d , OPCache: %s', $major, $minor, $release, $opCache);
+        return sprintf('PHP runtime: %d.%d.%d , OPCache: %s , OS: %s', $major, $minor, $release, $opCache, $this->operatingSystem);
     }
 
     public static function fromCurrentEnv(): self
@@ -39,7 +47,9 @@ final class EnvBenchmark implements Stringable
             $opcacheEnableCli = false !== $opcacheCli && ('1' === $opcacheCli || 'on' === strtolower($opcacheCli));
         }
 
-        return new self(PHP_VERSION_ID, $opcacheEnableCli);
+        $operatingSystem = sprintf('%s %s %s %s', php_uname('s'), php_uname('r'), php_uname('v'), php_uname('m'));
+
+        return new self(PHP_VERSION_ID, $opcacheEnableCli, $operatingSystem);
     }
 
     /**
@@ -47,6 +57,6 @@ final class EnvBenchmark implements Stringable
      */
     public function toHash(): string
     {
-        return md5(implode('|', [$this->phpVersionId, $this->opcacheEnableCli]));
+        return md5(implode('|', [$this->phpVersionId, $this->opcacheEnableCli, $this->operatingSystem]));
     }
 }

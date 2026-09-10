@@ -20,8 +20,9 @@ final class PrinterDataSet
 
         $benchDescriptionOne = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras porta eleifend ante ut maximus. Sed eget mi convallis, ultrices orci quis, aliquet dolor. Donec eget tellus eu mauris lacinia finibus.';
         $benchDescriptionTwo = 'Lorem ipsum dolor sit amet';
+        $os = 'Linux 6.18.33.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026 x86_64';
 
-        $envOne = new EnvBenchmark(80100, false);
+        $envOne = new EnvBenchmark(80100, false, $os);
 
         $resOne = new BenchmarkResults('v1.0.0', 'Foo group', $envOne);
         $resOne->attachIterations($benchDescriptionOne, $iterFixtures);

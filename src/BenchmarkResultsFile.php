@@ -30,6 +30,7 @@ use const JSON_THROW_ON_ERROR;
  * @phpstan-type BenchmarkEnvType array{
  * phpVersionId: int,
  * opcacheEnableCli: bool,
+ * operatingSystem: non-empty-string,
  * }
  * @phpstan-type TimeExecuteMemoryUsageInIterationType array{
  *     startBytesUsage: int,

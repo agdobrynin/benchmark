@@ -7,6 +7,7 @@ namespace Kaspi\Benchmark\Tests\BenchmarkPrinter;
 use InvalidArgumentException;
 use Kaspi\Benchmark\BenchmarkPrinter;
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\Formatter;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
@@ -23,6 +24,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(TimeExecuteMemoryUsageInIteration::class)]
 #[UsesClass(Formatter::class)]
 #[UsesClass(BenchmarkTimeExecuteMemoryUsage::class)]
+#[UsesClass(EnvBenchmark::class)]
 class PrintCompareVersionsTest extends TestCase
 {
     #[DataProviderExternal(PrinterDataSet::class, 'benchmarkResults')]
@@ -33,7 +35,8 @@ class PrintCompareVersionsTest extends TestCase
 
         $this->expectOutputString('
 +----------------------------------------------------------------------------------------------------+
-| PHP runtime: 8.1.0 , OPCache: off                                                                  |
+| PHP runtime: 8.1.0 , OPCache: off , OS: Linux 6.18.33.2-microsoft-standard-WSL2 #1 SMP             |
+| PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026 x86_64                                                |
 +--------------------------------+---------+-------+-------+---------------------------+-------------+
 | Benchmarks group               | Package | Iter. | Num.  | Memory (max)              | Time        |
 |  ↘️  Benchmark description     | version |       | of    +-------------+-------------+ execution   |

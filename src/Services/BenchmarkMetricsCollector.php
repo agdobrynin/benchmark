@@ -39,7 +39,10 @@ final class BenchmarkMetricsCollector
     public function start(): void
     {
         $this->startTime = hrtime(true);
-        unset($this->iterations);
+
+        if (!isset($this->iterations)) {
+            $this->iterations = [];
+        }
 
         if ($this->runGarbageCollector) {
             gc_collect_cycles();
