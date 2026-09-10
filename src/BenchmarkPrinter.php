@@ -157,6 +157,7 @@ TABLEHEAD;
 |                                |         |       | times | Usage code  | Peak code   | per iterate |
 |                                |         |       |       +-------------+-------------+             |
 |                                |         |       |       | Usage real  | Peak real   |             |
++--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 TABLEHEAD;
 
         $currentEnvHash = null;
@@ -176,7 +177,6 @@ TABLEHEAD;
             }
 
             foreach ($groupedResults as $groupName => $benchmarkNameWithPackageVersions) {
-                printf($formatLineBound, '', '', '', '', '', '', '');
                 printf($formatGroup, $groupName);
                 printf($formatLineBound, '', '', '', '', '', '', '');
 
