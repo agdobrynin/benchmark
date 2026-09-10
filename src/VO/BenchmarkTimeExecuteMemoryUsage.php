@@ -36,9 +36,14 @@ final class BenchmarkTimeExecuteMemoryUsage
     public readonly int $bytesPeakUsageReal;
 
     /**
-     * Average time per iteration in nanoseconds.
+     * Average iteration execution time in nanoseconds.
      */
-    public readonly float $time;
+    public readonly float $timeAvg;
+
+    /**
+     * Maximum iteration execution time in nanoseconds.
+     */
+    public readonly float $timeMax;
 
     /**
      * Number of iterations for the benchmark.
@@ -61,7 +66,7 @@ final class BenchmarkTimeExecuteMemoryUsage
 
         if (0 === $iterations) {
             $this->iterations = $this->numberOfTimes = $this->bytesUsage = $this->bytesUsageReal = $this->bytesPeakUsage = $this->bytesPeakUsageReal = 0;
-            $this->time = 0.0;
+            $this->timeAvg = $this->timeMax = 0.0;
 
             return;
         }
@@ -71,7 +76,7 @@ final class BenchmarkTimeExecuteMemoryUsage
         $this->numberOfTimes = $firstResult->numberOfTimes;
 
         $maxMemoryUsageInIterations = $maxMemoryUsageRealInIterations = $maxMemoryPeakUsageInIterations = $maxMemoryPeakUsageRealInIterations = 0;
-        $time = 0.0;
+        $time = $maxTime = 0.0;
 
         foreach ($timeExecuteMemoryUsageInIterations as $timeExecuteMemoryUsageInIteration) {
             if (!$timeExecuteMemoryUsageInIteration instanceof TimeExecuteMemoryUsageInIteration) {
@@ -80,14 +85,17 @@ final class BenchmarkTimeExecuteMemoryUsage
                 );
             }
 
-            $time += ($timeExecuteMemoryUsageInIteration->endTime - $timeExecuteMemoryUsageInIteration->startTime) / $this->numberOfTimes;
+            $timeIteration = ($timeExecuteMemoryUsageInIteration->endTime - $timeExecuteMemoryUsageInIteration->startTime) / $this->numberOfTimes;
+            $time += $timeIteration;
+            $maxTime = max($maxTime, $timeIteration);
             $maxMemoryUsageInIterations = max($maxMemoryUsageInIterations, $timeExecuteMemoryUsageInIteration->endBytesUsage - $timeExecuteMemoryUsageInIteration->startBytesUsage);
             $maxMemoryUsageRealInIterations = max($maxMemoryUsageRealInIterations, $timeExecuteMemoryUsageInIteration->endBytesUsageReal - $timeExecuteMemoryUsageInIteration->startBytesUsageReal);
             $maxMemoryPeakUsageInIterations = max($maxMemoryPeakUsageInIterations, $timeExecuteMemoryUsageInIteration->bytesPeakUsage);
             $maxMemoryPeakUsageRealInIterations = max($maxMemoryPeakUsageRealInIterations, $timeExecuteMemoryUsageInIteration->bytesPeakUsageReal);
         }
 
-        $this->time = ($time / $this->iterations);
+        $this->timeAvg = ($time / $this->iterations);
+        $this->timeMax = $maxTime;
         $this->bytesUsage = $maxMemoryUsageInIterations;
         $this->bytesUsageReal = $maxMemoryUsageRealInIterations;
         $this->bytesPeakUsage = $maxMemoryPeakUsageInIterations;
