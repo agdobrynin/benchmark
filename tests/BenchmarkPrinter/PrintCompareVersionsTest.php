@@ -38,30 +38,30 @@ class PrintCompareVersionsTest extends TestCase
 | PHP runtime: 8.1.0 , OPCache: off , OS: Linux 6.18.33.2-microsoft-standard-WSL2 #1 SMP             |
 | PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026 x86_64                                                |
 +--------------------------------+---------+-------+-------+---------------------------+-------------+
-| Benchmarks group               | Package | Iter. | Num.  | Memory (max)              | Time        |
-|  ↘️  Benchmark description     | version |       | of    +-------------+-------------+ execution   |
-|                                |         |       | times | Usage code  | Peak code   | per iterate |
-|                                |         |       |       +-------------+-------------+             |
-|                                |         |       |       | Usage real  | Peak real   |             |
+| Benchmarks group               | Package | Iter. | Num.  | Memory (max)              | Time exec.  |
+|  ↘️  Benchmark description     | version |       | of    +-------------+-------------+-------------+
+|                                |         |       | times | Usage code  | Peak code   | Avg iterate |
+|                                |         |       |       +-------------+-------------+-------------+
+|                                |         |       |       | Usage real  | Peak real   | Max iterate |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 | Foo group                                                                                          |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 |    Lorem ipsum dolor sit amet, |  v1.0.0 | 2     | 2     | 0 B         | 0 B         | 0 ns        |
-|   consectetur adipiscing elit. |         |       |       +-------------+-------------+             |
-|    Cras porta eleifend ante ut |         |       |       | 0 B         | 0 B         |             |
+|   consectetur adipiscing elit. |         |       |       +-------------+-------------+-------------+
+|    Cras porta eleifend ante ut |         |       |       | 0 B         | 0 B         | 0 ns        |
 |           maximus. Sed eget mi +---------+-------+-------+-------------+-------------+-------------+
 | convallis, ultrices orci quis, | v2.0.x… | 2     | 2     | 0 B         | 0 B         | 0 ns        |
-|      aliquet dolor. Donec eget |         |       |       +-------------+-------------+             |
-|       tellus eu mauris lacinia |         |       |       | 0 B         | 0 B         |             |
+|      aliquet dolor. Donec eget |         |       |       +-------------+-------------+-------------+
+|       tellus eu mauris lacinia |         |       |       | 0 B         | 0 B         | 0 ns        |
 |                       finibus. |         |       |       |             |             |             |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 |     Lorem ipsum dolor sit amet |  v1.0.0 | 2     | 2     | 0 B         | 0 B         | 0 ns        |
-|                                |         |       |       +-------------+-------------+             |
-|                                |         |       |       | 0 B         | 0 B         |             |
+|                                |         |       |       +-------------+-------------+-------------+
+|                                |         |       |       | 0 B         | 0 B         | 0 ns        |
 |                                +---------+-------+-------+-------------+-------------+-------------+
 |                                | v2.0.x… | 2     | 2     | 0 B         | 0 B         | 0 ns        |
-|                                |         |       |       +-------------+-------------+             |
-|                                |         |       |       | 0 B         | 0 B         |             |
+|                                |         |       |       +-------------+-------------+-------------+
+|                                |         |       |       | 0 B         | 0 B         | 0 ns        |
 +--------------------------------+---------+-------+-------+-------------+-------------+-------------+
 ');
         $printer->printCompareVersions();

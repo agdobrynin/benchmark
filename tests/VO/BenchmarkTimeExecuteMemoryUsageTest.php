@@ -30,7 +30,8 @@ class BenchmarkTimeExecuteMemoryUsageTest extends TestCase
         self::assertEquals(0, $b->bytesPeakUsageReal);
         self::assertEquals(0, $b->bytesUsage);
         self::assertEquals(0, $b->bytesUsageReal);
-        self::assertEquals(0.0, $b->time);
+        self::assertEquals(0.0, $b->timeAvg);
+        self::assertEquals(0.0, $b->timeMax);
         self::assertEquals(0, $b->numberOfTimes);
         self::assertEquals(0, $b->iterations);
     }
@@ -46,10 +47,11 @@ class BenchmarkTimeExecuteMemoryUsageTest extends TestCase
         160,
         1600,
         0.2833,
+        0.5,
         2,
         3,
     ])]
-    public function testTimeExecuteAndMemory(array $data, int $memUsage, int $memUsageReal, int $memPeakUsage, int $memPeakUsageReal, float $timeExec, int $numOfTimes, int $iters): void
+    public function testTimeExecuteAndMemory(array $data, int $memUsage, int $memUsageReal, int $memPeakUsage, int $memPeakUsageReal, float $timeExec, $timeExecMax, int $numOfTimes, int $iters): void
     {
         $b = new BenchmarkTimeExecuteMemoryUsage($data);
 
@@ -57,7 +59,8 @@ class BenchmarkTimeExecuteMemoryUsageTest extends TestCase
         self::assertEquals($memUsageReal, $b->bytesUsageReal);
         self::assertEquals($memPeakUsage, $b->bytesPeakUsage);
         self::assertEquals($memPeakUsageReal, $b->bytesPeakUsageReal);
-        self::assertEquals($timeExec, round($b->time, 4));
+        self::assertEquals($timeExec, round($b->timeAvg, 4));
+        self::assertEquals($timeExecMax, $b->timeMax);
         self::assertEquals($numOfTimes, $b->numberOfTimes);
         self::assertEquals($iters, $b->iterations);
     }
