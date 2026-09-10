@@ -65,7 +65,12 @@ TABLEHEAD;
         foreach ($this->benchmarkResultsCollectionGroupByEnvHash as $envHash => $benchmarkResultsList) {
             if ($currentEnvHash !== $envHash) {
                 printf("\n+%'-98s+", '');
-                printf("\n| %-96s |", $benchmarkResultsList[0]->env);
+
+                $envLines = explode("\n", wordwrap((string) $benchmarkResultsList[0]->env, 96, cut_long_words: true));
+                foreach ($envLines as $envLine) {
+                    printf("\n| %-96s |", $envLine);
+                }
+
                 printf("\n+%'-98s+", '');
                 $currentEnvHash = $benchmarkResultsList[0]->env->toHash();
             }
@@ -159,7 +164,13 @@ TABLEHEAD;
         foreach ($tableResults as $envHash => $groupedResults) {
             if ($currentEnvHash !== $envHash) {
                 printf("\n+%'-100s+", '');
-                printf("\n| %-98s |", $mapEnvHashesPrintedVersion[$envHash]);
+
+                $envLines = explode("\n", wordwrap($mapEnvHashesPrintedVersion[$envHash], 98, cut_long_words: true));
+
+                foreach ($envLines as $envLine) {
+                    printf("\n| %-98s |", $envLine);
+                }
+
                 $currentEnvHash = $envHash;
                 echo $tableHeader;
             }

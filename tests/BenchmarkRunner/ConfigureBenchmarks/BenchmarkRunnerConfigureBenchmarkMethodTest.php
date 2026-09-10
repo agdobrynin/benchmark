@@ -30,7 +30,7 @@ class BenchmarkRunnerConfigureBenchmarkMethodTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false, 'linux');
     }
 
     protected function tearDown(): void

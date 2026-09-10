@@ -30,7 +30,7 @@ class BenchmarkResultsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->results = new BenchmarkResults('0.0.1', 'Foo', new EnvBenchmark(PHP_VERSION_ID, false));
+        $this->results = new BenchmarkResults('0.0.1', 'Foo', new EnvBenchmark(PHP_VERSION_ID, false, 'linux'));
     }
 
     protected function tearDown(): void
