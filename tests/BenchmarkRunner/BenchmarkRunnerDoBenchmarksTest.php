@@ -282,7 +282,7 @@ class BenchmarkRunnerDoBenchmarksTest extends TestCase
 
         $this->expectOutputRegex('/(requires PHP version equals 20).*(requires PHP version greater than or equals 22)/sui');
 
-        (new BenchmarkRunner('v1.x-dev', $classOne, $classTwo))
+        (new BenchmarkRunner('v1.x-dev', $this->env, $classOne, $classTwo))
             ->doBenchmarks()
             ->valid()
         ;

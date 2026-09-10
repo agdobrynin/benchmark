@@ -11,6 +11,7 @@ use Kaspi\Benchmark\Attributes\RequiresPhp;
 use Kaspi\Benchmark\BenchmarkRunner;
 use Kaspi\Benchmark\DTO\BenchmarkGroup;
 use Kaspi\Benchmark\DTO\BenchmarkMethod;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\Formatter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -26,15 +27,30 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(BenchmarkGroup::class)]
 #[UsesClass(Benchmark::class)]
 #[UsesClass(Formatter::class)]
+#[UsesClass(EnvBenchmark::class)]
 class BenchmarkRunnerRequiresPhpTest extends TestCase
 {
+    protected EnvBenchmark $env;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->env = new EnvBenchmark(PHP_VERSION_ID, false);
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        unset($this->env);
+    }
+
     #[DataProvider('invalidAttributeProvider')]
     public function testInvalidAttribute(object $class, string $expectExceptionMessageMatchs): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageMatches($expectExceptionMessageMatchs);
 
-        new BenchmarkRunner('foo', $class);
+        new BenchmarkRunner('foo', $this->env, $class);
     }
 
     public static function invalidAttributeProvider(): Generator
@@ -75,7 +91,7 @@ class BenchmarkRunnerRequiresPhpTest extends TestCase
             public function doNothing(): void {}
         };
 
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertNull($runner->benchmarkGroups[0]->benchmarkMethods[0]->requiresPhp);
     }
@@ -83,7 +99,7 @@ class BenchmarkRunnerRequiresPhpTest extends TestCase
     #[DataProvider('successAttributeProvider')]
     public function testSuccessAttribute(object $class, string $humanReadable): void
     {
-        $runner = new BenchmarkRunner('foo', $class);
+        $runner = new BenchmarkRunner('foo', $this->env, $class);
 
         self::assertCount(1, $runner->benchmarkGroups);
 

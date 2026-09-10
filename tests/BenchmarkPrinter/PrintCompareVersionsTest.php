@@ -7,6 +7,7 @@ namespace Kaspi\Benchmark\Tests\BenchmarkPrinter;
 use InvalidArgumentException;
 use Kaspi\Benchmark\BenchmarkPrinter;
 use Kaspi\Benchmark\BenchmarkResults;
+use Kaspi\Benchmark\DTO\EnvBenchmark;
 use Kaspi\Benchmark\DTO\TimeExecuteMemoryUsageInIteration;
 use Kaspi\Benchmark\Formatter;
 use Kaspi\Benchmark\VO\BenchmarkTimeExecuteMemoryUsage;
@@ -23,6 +24,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(TimeExecuteMemoryUsageInIteration::class)]
 #[UsesClass(Formatter::class)]
 #[UsesClass(BenchmarkTimeExecuteMemoryUsage::class)]
+#[UsesClass(EnvBenchmark::class)]
 class PrintCompareVersionsTest extends TestCase
 {
     #[DataProviderExternal(PrinterDataSet::class, 'benchmarkResults')]
